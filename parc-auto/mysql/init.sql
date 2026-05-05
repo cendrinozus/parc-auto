@@ -1,0 +1,4 @@
+CREATE DATABASE IF NOT EXISTS parc_auto CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS 'parc_user'@'%' IDENTIFIED BY 'parc_pass';
+GRANT ALL PRIVILEGES ON parc_auto.* TO 'parc_user'@'%';
+FLUSH PRIVILEGES;

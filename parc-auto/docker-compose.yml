@@ -1,0 +1,53 @@
+version: '3.9'
+
+services:
+
+  mysql:
+    image: mysql:8.3
+    container_name: parc_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: parc_auto
+      MYSQL_USER: parc_user
+      MYSQL_PASSWORD: parc_pass
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: parc_backend
+    restart: unless-stopped
+    environment:
+      FLASK_ENV: production
+      SECRET_KEY: ${SECRET_KEY:-super-secret-key}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-jwt-super-secret}
+      DB_URI: mysql+pymysql://parc_user:parc_pass@mysql/parc_auto
+      CORS_ORIGINS: http://localhost,http://localhost:80
+    ports:
+      - "5000:5000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - ./backend:/app
+
+  frontend:
+    build: ./frontend
+    container_name: parc_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:

@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cipres-50 text-gray-900;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-cipres-600 hover:bg-cipres-700 active:bg-cipres-800 text-white font-semibold px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm;
+  }
+  .btn-secondary {
+    @apply bg-white hover:bg-cipres-50 text-cipres-700 font-semibold px-4 py-2 rounded-lg border-2 border-cipres-600 transition-colors;
+  }
+  .btn-danger {
+    @apply bg-red-600 hover:bg-red-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors;
+  }
+  .card {
+    @apply bg-white rounded-xl shadow-sm border border-gray-200 p-6;
+  }
+  .input {
+    @apply w-full border-2 border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cipres-400 focus:border-cipres-500 transition-colors bg-white;
+  }
+  .label {
+    @apply block text-sm font-semibold text-gray-700 mb-1;
+  }
+
+  /* Badges statut */
+  .badge-actif {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-green-100 text-green-800 border border-green-300 uppercase tracking-wide;
+  }
+  .badge-maintenance {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-yellow-100 text-yellow-800 border border-yellow-300 uppercase tracking-wide;
+  }
+  .badge-hors_service {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-red-100 text-red-800 border border-red-300 uppercase tracking-wide;
+  }
+
+  /* En-tête de tableau style CIPRES */
+  .thead-cipres th {
+    @apply px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-white bg-cipres-700;
+  }
+  .thead-cipres th:first-child {
+    @apply rounded-tl-lg;
+  }
+  .thead-cipres th:last-child {
+    @apply rounded-tr-lg;
+  }
+}

@@ -1,0 +1,153 @@
+WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://172.20.40.109:5000
+Press CTRL+C to quit
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 900-466-976
+D:\PYTHON\GITHUB\parc-auto\parc-auto\backend\venv\lib\site-packages\jwt\api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 20 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  decoded = self.decode_complete(
+127.0.0.1 - - [05/May/2026 13:09:20] "GET /api/alertes/count HTTP/1.1" 200 -
+D:\PYTHON\GITHUB\parc-auto\parc-auto\backend\venv\lib\site-packages\jwt\api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 20 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+127.0.0.1 - - [05/May/2026 13:09:36] "POST /api/auth/login HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:09:36] "GET /api/utilisateurs/ HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:09:36] "POST /api/utilisateurs/ HTTP/1.1" 400 -
+127.0.0.1 - - [05/May/2026 13:09:54] "POST /api/auth/login HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:09:54] "POST /api/utilisateurs/ HTTP/1.1" 201 -
+127.0.0.1 - - [05/May/2026 13:09:54] "PUT /api/utilisateurs/2 HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:09:54] "DELETE /api/utilisateurs/1 HTTP/1.1" 400 -
+127.0.0.1 - - [05/May/2026 13:09:54] "DELETE /api/utilisateurs/2 HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:09:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:10:17] "POST /api/utilisateurs/ HTTP/1.1" 201 -
+127.0.0.1 - - [05/May/2026 13:10:17] "GET /api/utilisateurs/ HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:10:17] "GET /api/utilisateurs/ HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:10:19] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:10:59] "POST /api/auth/login HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:10:59] "GET /api/rapports/global?annee=2026 HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:10:59] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:10:59] "GET /api/rapports/mensuel?annee=2026 HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:10:59] "GET /api/rapports/global?annee=2026 HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:10:59] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:10:59] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:10:59] "GET /api/rapports/mensuel?annee=2026 HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:10:59] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:11:10] "GET /api/conducteurs/ HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:11:10] "GET /api/conducteurs/ HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:11:29] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:12:00] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:12:30] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:13:00] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:13:30] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:14:00] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:14:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:15:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:16:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:17:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:18:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:19:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:20:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:21:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:22:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:23:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:24:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:25:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:26:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:27:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:28:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:29:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:30:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:31:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:32:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:33:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:34:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:35:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:36:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:37:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:38:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:39:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:40:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:41:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:42:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:43:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:44:46] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:45:00] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:45:30] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:46:46] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:47:47] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:48:48] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:49:49] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:50:34] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:51:00] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:51:30] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:52:46] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:53:47] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:54:48] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:55:49] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:56:31] "GET /api-docs HTTP/1.1" 404 -
+127.0.0.1 - - [05/May/2026 13:56:50] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:57:51] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:58:52] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 13:59:53] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:00:54] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:01:55] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:02:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:03:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:04:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:05:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:06:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:07:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:08:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:09:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:10:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:11:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:12:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:13:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:14:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:15:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:16:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:17:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:18:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:19:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:20:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:21:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:22:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:23:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:24:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:25:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:26:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:27:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:28:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:29:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:30:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:31:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:32:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:33:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:34:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:35:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:36:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:37:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:38:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:39:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:40:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:41:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:42:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:43:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:44:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:44:59] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:45:30] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:46:00] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:46:30] "GET /api/alertes/count HTTP/1.1" 200 -
+ * Detected change in 'D:\\PYTHON\\GITHUB\\parc-auto\\parc-auto\\backend\\app\\__init__.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 900-466-976
+D:\PYTHON\GITHUB\parc-auto\parc-auto\backend\venv\lib\site-packages\jwt\api_jwt.py:147: InsecureKeyLengthWarning: The HMAC key is 20 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  return self._jws.encode(
+127.0.0.1 - - [05/May/2026 14:47:55] "POST /api/auth/login HTTP/1.1" 200 -
+D:\PYTHON\GITHUB\parc-auto\parc-auto\backend\venv\lib\site-packages\jwt\api_jwt.py:365: InsecureKeyLengthWarning: The HMAC key is 20 bytes long, which is below the minimum recommended length of 32 bytes for SHA256. See RFC 7518 Section 3.2.
+  decoded = self.decode_complete(
+127.0.0.1 - - [05/May/2026 14:47:56] "GET /api/alertes/count HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:48:09] "POST /api/auth/login HTTP/1.1" 200 -
+127.0.0.1 - - [05/May/2026 14:48:56] "GET /api/alertes/count HTTP/1.1" 200 -
