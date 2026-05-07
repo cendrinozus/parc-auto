@@ -1,0 +1,14 @@
+# Dependencies
+frontend/node_modules/
+backend/__pycache__/
+backend/*.pyc
+
+# Build output
+frontend/dist/
+
+# Environment
+.env
+.env.local
+
+# Docker volumes
+mysql/data/
