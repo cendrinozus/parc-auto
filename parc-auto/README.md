@@ -10,7 +10,7 @@ Stack : **React 18** + **Flask 3** + **MySQL 8** + **Apache2**
 ```bash
 git clone <repo> parc-auto && cd parc-auto
 cp backend/.env.example backend/.env   # adapter les secrets
-docker-compose up --build
+docker compose up --build
 ```
 
 - Frontend : http://localhost

@@ -7,7 +7,6 @@ RUN npm run build
 
 FROM httpd:2.4
 COPY --from=builder /app/dist /usr/local/apache2/htdocs/
-COPY .htaccess /usr/local/apache2/htdocs/.htaccess
 
 RUN echo "LoadModule rewrite_module modules/mod_rewrite.so" >> /usr/local/apache2/conf/httpd.conf && \
     echo "LoadModule proxy_module modules/mod_proxy.so" >> /usr/local/apache2/conf/httpd.conf && \
