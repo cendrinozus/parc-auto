@@ -42,8 +42,6 @@ services:
     restart: unless-stopped
     environment:
       PMA_HOST: mysql
-      PMA_USER: parc_user
-      PMA_PASSWORD: parc_pass
     ports:
       - "8181:80"
     depends_on:
