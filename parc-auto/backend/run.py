@@ -12,7 +12,11 @@ def make_shell_context():
 @app.cli.command('seed')
 def seed_db():
     """Peupler la base avec des données de test."""
-    admin = Utilisateur(nom='Admin', prenom='Super', email='admin@parc.com', role='admin')
+    if Utilisateur.query.filter_by(email='admin@parc.com').first():
+        print('Seed déjà effectué, ignoré.')
+        return
+
+    admin = Utilisateur(nom='Admin', prenom='Super', email='admin@parc.com', role='admin', actif=True)
     admin.set_password('admin123')
     db.session.add(admin)
 
