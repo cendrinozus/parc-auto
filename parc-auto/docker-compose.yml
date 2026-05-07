@@ -45,7 +45,7 @@ services:
       PMA_USER: parc_user
       PMA_PASSWORD: parc_pass
     ports:
-      - "8080:80"
+      - "8181:80"
     depends_on:
       mysql:
         condition: service_healthy
