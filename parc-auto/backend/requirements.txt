@@ -8,5 +8,4 @@ cryptography==42.0.8
 marshmallow==3.21.3
 Werkzeug==3.0.3
 gunicorn==22.0.0
-mod_wsgi==5.0.0
 python-dotenv==1.0.1
