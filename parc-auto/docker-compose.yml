@@ -12,8 +12,6 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "3306:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword"]
       interval: 10s
@@ -37,6 +35,20 @@ services:
         condition: service_healthy
     volumes:
       - ./backend:/app
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: parc_phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_USER: parc_user
+      PMA_PASSWORD: parc_pass
+    ports:
+      - "8080:80"
+    depends_on:
+      mysql:
+        condition: service_healthy
 
   frontend:
     build: ./frontend
