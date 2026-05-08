@@ -33,8 +33,6 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-    volumes:
-      - ./backend:/app
 
   phpmyadmin:
     image: phpmyadmin:latest
