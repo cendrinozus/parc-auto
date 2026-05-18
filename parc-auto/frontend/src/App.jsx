@@ -16,6 +16,7 @@ import Rapports from './pages/rapports/Rapports'
 import Alertes from './pages/alertes/Alertes'
 import UtilisateursList from './pages/utilisateurs/UtilisateursList'
 import UtilisateurForm from './pages/utilisateurs/UtilisateurForm'
+import Parametres from './pages/parametres/Parametres'
 
 export default function App() {
   return (
@@ -34,11 +35,13 @@ export default function App() {
           <Route path="conducteurs/:id/modifier" element={<ConducteurForm />} />
           <Route path="pleins" element={<PleinsList />} />
           <Route path="pleins/nouveau" element={<PleinForm />} />
+          <Route path="pleins/:id/modifier" element={<PleinForm />} />
           <Route path="rapports" element={<Rapports />} />
           <Route path="alertes" element={<Alertes />} />
           <Route path="utilisateurs" element={<AdminRoute><UtilisateursList /></AdminRoute>} />
           <Route path="utilisateurs/nouveau" element={<AdminRoute><UtilisateurForm /></AdminRoute>} />
           <Route path="utilisateurs/:id/modifier" element={<AdminRoute><UtilisateurForm /></AdminRoute>} />
+          <Route path="parametres" element={<AdminRoute><Parametres /></AdminRoute>} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

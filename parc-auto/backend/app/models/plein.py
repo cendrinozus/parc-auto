@@ -6,6 +6,7 @@ class Plein(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     vehicule_id = db.Column(db.Integer, db.ForeignKey('vehicules.id'), nullable=False)
+    conducteur_id = db.Column(db.Integer, db.ForeignKey('conducteurs.id'), nullable=True)
     utilisateur_id = db.Column(db.Integer, db.ForeignKey('utilisateurs.id'))
     date_plein = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     km_compteur = db.Column(db.Float, nullable=False)
@@ -14,6 +15,7 @@ class Plein(db.Model):
     cout_total = db.Column(db.Float, nullable=False)
     station = db.Column(db.String(150))
     type_carburant = db.Column(db.String(50))
+    motif = db.Column(db.String(200))
     plein_complet = db.Column(db.Boolean, default=True)
     consommation_100km = db.Column(db.Float)
     notes = db.Column(db.Text)
@@ -23,6 +25,7 @@ class Plein(db.Model):
         return {
             'id': self.id,
             'vehicule_id': self.vehicule_id,
+            'conducteur_id': self.conducteur_id,
             'utilisateur_id': self.utilisateur_id,
             'date_plein': self.date_plein.isoformat(),
             'km_compteur': self.km_compteur,
@@ -31,6 +34,7 @@ class Plein(db.Model):
             'cout_total': self.cout_total,
             'station': self.station,
             'type_carburant': self.type_carburant,
+            'motif': self.motif,
             'plein_complet': self.plein_complet,
             'consommation_100km': self.consommation_100km,
             'notes': self.notes,

@@ -151,3 +151,11 @@ D:\PYTHON\GITHUB\parc-auto\parc-auto\backend\venv\lib\site-packages\jwt\api_jwt.
 127.0.0.1 - - [05/May/2026 14:47:56] "GET /api/alertes/count HTTP/1.1" 200 -
 127.0.0.1 - - [05/May/2026 14:48:09] "POST /api/auth/login HTTP/1.1" 200 -
 127.0.0.1 - - [05/May/2026 14:48:56] "GET /api/alertes/count HTTP/1.1" 200 -
+ * Detected change in 'D:\\PYTHON\\GITHUB\\parc-auto\\parc-auto\\backend\\run.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 900-466-976
+ * Detected change in 'D:\\PYTHON\\GITHUB\\parc-auto\\parc-auto\\backend\\run.py', reloading
+ * Restarting with stat
+ * Debugger is active!
+ * Debugger PIN: 900-466-976

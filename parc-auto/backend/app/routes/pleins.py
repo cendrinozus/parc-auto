@@ -3,12 +3,15 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from app import db
 from app.models.plein import Plein
 from app.models.vehicule import Vehicule
+from app.models.conducteur import Conducteur
 
 pleins_bp = Blueprint('pleins', __name__)
 
-def calculer_consommation(vehicule_id, km_actuel, litres):
-    dernier = Plein.query.filter_by(vehicule_id=vehicule_id, plein_complet=True)\
-        .order_by(Plein.km_compteur.desc()).first()
+def calculer_consommation(vehicule_id, km_actuel, litres, exclude_id=None):
+    query = Plein.query.filter_by(vehicule_id=vehicule_id, plein_complet=True)
+    if exclude_id:
+        query = query.filter(Plein.id != exclude_id)
+    dernier = query.order_by(Plein.km_compteur.desc()).first()
     if dernier and km_actuel > dernier.km_compteur:
         distance = km_actuel - dernier.km_compteur
         return round((litres / distance) * 100, 2)
@@ -31,6 +34,10 @@ def get_pleins():
         if v:
             d['vehicule_immat'] = v.immatriculation
             d['vehicule_label'] = f"{v.marque} {v.modele}"
+        if p.conducteur_id:
+            c = Conducteur.query.get(p.conducteur_id)
+            if c:
+                d['conducteur_nom'] = f"{c.prenom} {c.nom}"
         result.append(d)
     return jsonify(result), 200
 
@@ -55,11 +62,15 @@ def create_plein():
     km = float(data['km_compteur'])
     plein_complet = data.get('plein_complet', True)
 
+    if vehicule.km_actuel and km < vehicule.km_actuel:
+        return jsonify({'message': f'Le km compteur ({km:,.0f}) est inférieur au dernier relevé ({vehicule.km_actuel:,.0f} km)'}), 400
+
     conso = calculer_consommation(vehicule.id, km, litres) if plein_complet else None
 
     from datetime import datetime
     p = Plein(
         vehicule_id=vehicule.id,
+        conducteur_id=data.get('conducteur_id'),
         utilisateur_id=int(identity),
         date_plein=datetime.fromisoformat(data['date_plein']) if data.get('date_plein') else datetime.utcnow(),
         km_compteur=km,
@@ -67,7 +78,8 @@ def create_plein():
         prix_litre=prix_litre,
         cout_total=round(litres * prix_litre, 2),
         station=data.get('station'),
-        type_carburant=data.get('type_carburant', vehicule.type_carburant),
+        type_carburant=vehicule.type_carburant,
+        motif=data.get('motif'),
         plein_complet=plein_complet,
         consommation_100km=conso,
         notes=data.get('notes')
@@ -95,13 +107,49 @@ def create_plein():
 @pleins_bp.route('/<int:id>', methods=['PUT'])
 @jwt_required()
 def update_plein(id):
+    from datetime import datetime
     p = Plein.query.get_or_404(id)
     data = request.get_json()
-    for field in ['km_compteur', 'litres', 'prix_litre', 'station', 'notes', 'plein_complet']:
+
+    # Validation km
+    if 'km_compteur' in data:
+        new_km = float(data['km_compteur'])
+        precedent = Plein.query.filter(
+            Plein.vehicule_id == p.vehicule_id,
+            Plein.id != p.id,
+            Plein.km_compteur < p.km_compteur
+        ).order_by(Plein.km_compteur.desc()).first()
+        if precedent and new_km < precedent.km_compteur:
+            return jsonify({'message': f'Le km compteur ({new_km:,.0f}) est inférieur au relevé précédent ({precedent.km_compteur:,.0f} km)'}), 400
+        p.km_compteur = new_km
+
+    # Champs simples
+    for field in ['litres', 'prix_litre', 'station', 'notes', 'plein_complet']:
         if field in data:
             setattr(p, field, data[field])
-    if 'litres' in data or 'prix_litre' in data:
-        p.cout_total = round(p.litres * p.prix_litre, 2)
+
+    # Champs avec coercition explicite
+    if 'conducteur_id' in data:
+        p.conducteur_id = int(data['conducteur_id']) if data['conducteur_id'] else None
+    if 'motif' in data:
+        p.motif = data['motif'] or None
+    if 'date_plein' in data and data['date_plein']:
+        p.date_plein = datetime.fromisoformat(data['date_plein'])
+
+    # Recalcul du coût total
+    p.cout_total = round(p.litres * p.prix_litre, 2)
+
+    # Recalcul de la consommation (en excluant le plein courant du calcul du précédent)
+    if p.plein_complet:
+        p.consommation_100km = calculer_consommation(p.vehicule_id, p.km_compteur, p.litres, exclude_id=p.id)
+    else:
+        p.consommation_100km = None
+
+    # Mise à jour km_actuel du véhicule si besoin
+    vehicule = Vehicule.query.get(p.vehicule_id)
+    if vehicule:
+        vehicule.km_actuel = max(vehicule.km_actuel, p.km_compteur)
+
     db.session.commit()
     return jsonify(p.to_dict()), 200
 
@@ -109,6 +157,16 @@ def update_plein(id):
 @jwt_required()
 def delete_plein(id):
     p = Plein.query.get_or_404(id)
+    vehicule_id = p.vehicule_id
     db.session.delete(p)
+    db.session.flush()
+
+    # Recalculer km_actuel à partir des pleins restants
+    vehicule = Vehicule.query.get(vehicule_id)
+    if vehicule:
+        dernier = Plein.query.filter_by(vehicule_id=vehicule_id)\
+            .order_by(Plein.km_compteur.desc()).first()
+        vehicule.km_actuel = dernier.km_compteur if dernier else vehicule.km_initial
+
     db.session.commit()
     return jsonify({'message': 'Plein supprimé'}), 200

@@ -25,6 +25,7 @@ def create_app(config_name='default'):
     from app.routes.rapports import rapports_bp
     from app.routes.alertes import alertes_bp
     from app.routes.utilisateurs import utilisateurs_bp
+    from app.routes.parametres import parametres_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(vehicules_bp, url_prefix='/api/vehicules')
@@ -33,6 +34,7 @@ def create_app(config_name='default'):
     app.register_blueprint(rapports_bp, url_prefix='/api/rapports')
     app.register_blueprint(alertes_bp, url_prefix='/api/alertes')
     app.register_blueprint(utilisateurs_bp, url_prefix='/api/utilisateurs')
+    app.register_blueprint(parametres_bp, url_prefix='/api/parametres')
 
     @app.after_request
     def set_security_headers(response):

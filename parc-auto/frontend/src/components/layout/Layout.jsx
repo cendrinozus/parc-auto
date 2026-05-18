@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { alertesService } from '../../services'
 import {
   LayoutDashboard, Car, Users, Fuel, BarChart3,
-  Bell, LogOut, Menu, UserCog
+  Bell, LogOut, Menu, UserCog, Settings
 } from 'lucide-react'
 import logoCipres from '../../assets/logo-cipres.png'
 
@@ -19,6 +19,7 @@ const navItems = [
 
 const adminNavItems = [
   { to: '/utilisateurs', label: 'Utilisateurs', icon: UserCog },
+  { to: '/parametres',   label: 'Paramètres',   icon: Settings },
 ]
 
 export default function Layout() {

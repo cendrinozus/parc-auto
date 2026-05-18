@@ -47,3 +47,8 @@ export const utilisateursService = {
   update: (id, data) => api.put(`/utilisateurs/${id}`, data),
   delete: (id) => api.delete(`/utilisateurs/${id}`)
 }
+
+export const parametresService = {
+  getAll: () => api.get('/parametres/'),
+  update: (data) => api.put('/parametres/', data)
+}

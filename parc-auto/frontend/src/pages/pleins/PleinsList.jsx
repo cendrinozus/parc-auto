@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { pleinsService, vehiculesService } from '../../services'
-import { Plus, Trash2 } from 'lucide-react'
+import { Plus, Trash2, Pencil } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const ANNEE_COURANTE = new Date().getFullYear()
 const ANNEES = Array.from({ length: 5 }, (_, i) => ANNEE_COURANTE - i)
 
 export default function PleinsList() {
+  const navigate = useNavigate()
   const [pleins, setPleins] = useState([])
   const [vehicules, setVehicules] = useState([])
   const [vehiculeFilter, setVehiculeFilter] = useState('')
@@ -73,7 +74,7 @@ export default function PleinsList() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="thead-cipres">
-                  {['Date','Véhicule','Km compteur','Litres','Prix/L','Coût total','L/100km','Station',''].map(h => (
+                  {['Date','Véhicule','Conducteur','Km compteur','Litres','Prix/L','Coût total','L/100km',''].map(h => (
                     <th key={h}>{h}</th>
                   ))}
                 </tr>
@@ -83,6 +84,7 @@ export default function PleinsList() {
                   <tr key={p.id} className="hover:bg-cipres-50">
                     <td className="px-4 py-3">{new Date(p.date_plein).toLocaleDateString('fr-FR')}</td>
                     <td className="px-4 py-3 font-bold text-cipres-600 font-mono">{p.vehicule_immat || '—'}</td>
+                    <td className="px-4 py-3 text-gray-700">{p.conducteur_nom || '—'}</td>
                     <td className="px-4 py-3">{p.km_compteur?.toLocaleString()} km</td>
                     <td className="px-4 py-3">{p.litres} L</td>
                     <td className="px-4 py-3">{p.prix_litre} FCFA</td>
@@ -94,9 +96,11 @@ export default function PleinsList() {
                         </span>
                       ) : '—'}
                     </td>
-                    <td className="px-4 py-3 text-gray-500">{p.station || '—'}</td>
                     <td className="px-4 py-3">
-                      <button onClick={() => handleDelete(p.id)} className="text-red-400 hover:text-red-600"><Trash2 size={15} /></button>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => navigate(`/pleins/${p.id}/modifier`)} className="text-cipres-400 hover:text-cipres-700" title="Modifier"><Pencil size={15} /></button>
+                        <button onClick={() => handleDelete(p.id)} className="text-red-400 hover:text-red-600" title="Supprimer"><Trash2 size={15} /></button>
+                      </div>
                     </td>
                   </tr>
                 ))}
