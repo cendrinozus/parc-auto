@@ -7,6 +7,7 @@ Create Date: 2026-05-22 00:00:00.000000
 """
 from alembic import op
 import sqlalchemy as sa
+from sqlalchemy import inspect
 
 
 revision = 'd4e5f6a7b8c9'
@@ -16,29 +17,36 @@ depends_on = None
 
 
 def upgrade():
+    bind = op.get_bind()
+    inspector = inspect(bind)
+    tables = inspector.get_table_names()
+
     # Table écheances
-    op.create_table(
-        'echeances_vehicule',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('vehicule_id', sa.Integer(), nullable=False),
-        sa.Column('type_document', sa.String(50), nullable=False),
-        sa.Column('date_echeance', sa.Date(), nullable=False),
-        sa.Column('notes', sa.Text(), nullable=True),
-        sa.Column('notifications_envoyees', sa.String(50), nullable=True),
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.Column('updated_at', sa.DateTime(), nullable=True),
-        sa.ForeignKeyConstraint(['vehicule_id'], ['vehicules.id'], ondelete='CASCADE'),
-        sa.PrimaryKeyConstraint('id')
-    )
+    if 'echeances_vehicule' not in tables:
+        op.create_table(
+            'echeances_vehicule',
+            sa.Column('id', sa.Integer(), nullable=False),
+            sa.Column('vehicule_id', sa.Integer(), nullable=False),
+            sa.Column('type_document', sa.String(50), nullable=False),
+            sa.Column('date_echeance', sa.Date(), nullable=False),
+            sa.Column('notes', sa.Text(), nullable=True),
+            sa.Column('notifications_envoyees', sa.String(50), nullable=True),
+            sa.Column('created_at', sa.DateTime(), nullable=True),
+            sa.Column('updated_at', sa.DateTime(), nullable=True),
+            sa.ForeignKeyConstraint(['vehicule_id'], ['vehicules.id'], ondelete='CASCADE'),
+            sa.PrimaryKeyConstraint('id')
+        )
 
     # Colonne echeance_id sur alertes
-    op.add_column('alertes', sa.Column('echeance_id', sa.Integer(), nullable=True))
-    op.create_foreign_key(
-        'fk_alertes_echeance_id',
-        'alertes', 'echeances_vehicule',
-        ['echeance_id'], ['id'],
-        ondelete='SET NULL'
-    )
+    alertes_columns = [c['name'] for c in inspector.get_columns('alertes')]
+    if 'echeance_id' not in alertes_columns:
+        op.add_column('alertes', sa.Column('echeance_id', sa.Integer(), nullable=True))
+        op.create_foreign_key(
+            'fk_alertes_echeance_id',
+            'alertes', 'echeances_vehicule',
+            ['echeance_id'], ['id'],
+            ondelete='SET NULL'
+        )
 
     # Nouveaux paramètres
     op.execute("""

@@ -61,6 +61,26 @@ sudo systemctl restart apache2
 
 ---
 
+## pour un déploiement en https avec certificat ssl
+
+Ce qu'il faut faire sur le serveur avant de déployer :
+
+1. Placer les fichiers du certificat AD :
+
+sudo mkdir -p /etc/ssl/parc-auto
+# Copier le certificat et la clé privée issus de l'AD CA
+sudo cp parc-auto.crt /etc/ssl/parc-auto/
+sudo cp parc-auto.key /etc/ssl/parc-auto/
+sudo chmod 600 /etc/ssl/parc-auto/parc-auto.key
+
+2. Déployer :
+
+
+git pull
+cd parc-auto
+sudo docker compose up --build
+L'application sera ensuite accessible en https://IP_SERVEUR, avec redirection automatique depuis http://.
+
 ## Structure du projet
 
 ```
