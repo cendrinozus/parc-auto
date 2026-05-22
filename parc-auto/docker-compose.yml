@@ -27,7 +27,7 @@ services:
       SECRET_KEY: ${SECRET_KEY:-super-secret-key}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY:-jwt-super-secret}
       DB_URI: mysql+pymysql://parc_user:parc_pass@mysql/parc_auto
-      CORS_ORIGINS: http://localhost,http://localhost:80
+      CORS_ORIGINS: http://localhost,http://localhost:80,https://parc-auto.lacipres.org,https://192.168.1.45
     ports:
       - "5000:5000"
     depends_on:
