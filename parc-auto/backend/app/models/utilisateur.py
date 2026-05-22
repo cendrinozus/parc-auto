@@ -12,6 +12,7 @@ class Utilisateur(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.Enum('admin', 'gestionnaire', 'conducteur'), default='conducteur')
     actif = db.Column(db.Boolean, default=True)
+    conducteur_id = db.Column(db.Integer, db.ForeignKey('conducteurs.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -31,5 +32,6 @@ class Utilisateur(db.Model):
             'email': self.email,
             'role': self.role,
             'actif': self.actif,
+            'conducteur_id': self.conducteur_id,
             'created_at': self.created_at.isoformat()
         }

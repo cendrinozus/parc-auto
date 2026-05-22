@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { alertesService } from '../../services'
 import {
   LayoutDashboard, Car, Users, Fuel, BarChart3,
-  Bell, LogOut, Menu, UserCog, Settings
+  Bell, LogOut, Menu, UserCog, Settings, ClipboardList, BookOpen
 } from 'lucide-react'
 import logoCipres from '../../assets/logo-cipres.png'
 
@@ -13,11 +13,13 @@ const navItems = [
   { to: '/vehicules',   label: 'Véhicules',        icon: Car },
   { to: '/conducteurs', label: 'Conducteurs',      icon: Users },
   { to: '/pleins',      label: 'Pleins carburant',  icon: Fuel },
+  { to: '/releves',     label: 'Mes relevés',       icon: ClipboardList },
   { to: '/rapports',    label: 'Rapports',          icon: BarChart3 },
   { to: '/alertes',     label: 'Alertes',           icon: Bell },
 ]
 
 const adminNavItems = [
+  { to: '/releves/tous', label: 'Relevés conducteurs', icon: BookOpen },
   { to: '/utilisateurs', label: 'Utilisateurs', icon: UserCog },
   { to: '/parametres',   label: 'Paramètres',   icon: Settings },
 ]

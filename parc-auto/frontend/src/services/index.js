@@ -15,7 +15,10 @@ export const conducteursService = {
   create: (data) => api.post('/conducteurs/', data),
   update: (id, data) => api.put(`/conducteurs/${id}`, data),
   delete: (id) => api.delete(`/conducteurs/${id}`),
-  getAffectations: (id) => api.get(`/conducteurs/${id}/affectations`)
+  getAffectations: (id) => api.get(`/conducteurs/${id}/affectations`),
+  createAffectation: (id, data) => api.post(`/conducteurs/${id}/affectations`, data),
+  terminerAffectation: (id, affId) => api.put(`/conducteurs/${id}/affectations/${affId}/terminer`),
+  deleteAffectation: (id, affId) => api.delete(`/conducteurs/${id}/affectations/${affId}`)
 }
 
 export const pleinsService = {
@@ -51,4 +54,15 @@ export const utilisateursService = {
 export const parametresService = {
   getAll: () => api.get('/parametres/'),
   update: (data) => api.put('/parametres/', data)
+}
+
+export const relevesService = {
+  getAujourdhui: () => api.get('/releves/aujourd-hui'),
+  getHistorique: () => api.get('/releves/historique'),
+  getAll: (params) => api.get('/releves/', { params }),
+  create: (data) => api.post('/releves/', data),
+  update: (id, data) => api.put(`/releves/${id}`, data),
+  addTrajet: (id, data) => api.post(`/releves/${id}/trajets`, data),
+  updateTrajet: (id, tid, data) => api.put(`/releves/${id}/trajets/${tid}`, data),
+  deleteTrajet: (id, tid) => api.delete(`/releves/${id}/trajets/${tid}`)
 }

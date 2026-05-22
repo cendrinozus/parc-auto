@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { utilisateursService } from '../../services'
+import { utilisateursService, conducteursService } from '../../services'
 import { useAuth } from '../../context/AuthContext'
 import { ArrowLeft } from 'lucide-react'
 import toast from 'react-hot-toast'
 
-const defaultForm = { nom: '', prenom: '', email: '', password: '', role: 'conducteur', actif: true }
+const defaultForm = { nom: '', prenom: '', email: '', password: '', role: 'conducteur', actif: true, conducteur_id: '' }
 
 export default function UtilisateurForm() {
   const { id } = useParams()
@@ -13,16 +13,31 @@ export default function UtilisateurForm() {
   const { user: currentUser } = useAuth()
   const [form, setForm] = useState(defaultForm)
   const [loading, setLoading] = useState(false)
+  const [conducteurs, setConducteurs] = useState([])
+
+  useEffect(() => {
+    conducteursService.getAll({ actif: true })
+      .then(r => setConducteurs(r.data))
+      .catch(() => {})
+  }, [])
 
   useEffect(() => {
     if (id) {
       utilisateursService.getById(id)
-        .then(r => setForm({ ...r.data, password: '' }))
+        .then(r => setForm({ ...r.data, password: '', conducteur_id: r.data.conducteur_id ?? '' }))
         .catch(() => navigate('/utilisateurs'))
     }
   }, [id])
 
   const set = (k, v) => setForm(p => ({ ...p, [k]: v }))
+
+  const handleConducteurChange = (conducteurId) => {
+    set('conducteur_id', conducteurId)
+    if (conducteurId) {
+      const c = conducteurs.find(c => c.id === parseInt(conducteurId))
+      if (c) { set('nom', c.nom); set('prenom', c.prenom) }
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -65,6 +80,24 @@ export default function UtilisateurForm() {
 
         <form onSubmit={handleSubmit} className="space-y-4 px-6 pb-6">
           <div className="grid grid-cols-2 gap-4">
+
+            {/* Lien conducteur en tête, visible seulement pour le rôle conducteur */}
+            {form.role === 'conducteur' && (
+              <div className="col-span-2">
+                <label className="label">Profil conducteur</label>
+                <select
+                  className="input"
+                  value={form.conducteur_id}
+                  onChange={e => handleConducteurChange(e.target.value)}
+                >
+                  <option value="">— Sélectionner un conducteur —</option>
+                  {conducteurs.map(c => (
+                    <option key={c.id} value={c.id}>{c.prenom} {c.nom}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             <div>
               <label className="label">Nom *</label>
               <input className="input" value={form.nom} onChange={e => set('nom', e.target.value)} required />

@@ -17,6 +17,8 @@ import Alertes from './pages/alertes/Alertes'
 import UtilisateursList from './pages/utilisateurs/UtilisateursList'
 import UtilisateurForm from './pages/utilisateurs/UtilisateurForm'
 import Parametres from './pages/parametres/Parametres'
+import MesReleves from './pages/releves/MesReleves'
+import TousLesReleves from './pages/releves/TousLesReleves'
 
 export default function App() {
   return (
@@ -42,6 +44,8 @@ export default function App() {
           <Route path="utilisateurs/nouveau" element={<AdminRoute><UtilisateurForm /></AdminRoute>} />
           <Route path="utilisateurs/:id/modifier" element={<AdminRoute><UtilisateurForm /></AdminRoute>} />
           <Route path="parametres" element={<AdminRoute><Parametres /></AdminRoute>} />
+          <Route path="releves" element={<MesReleves />} />
+          <Route path="releves/tous" element={<AdminRoute><TousLesReleves /></AdminRoute>} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

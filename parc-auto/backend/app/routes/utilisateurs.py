@@ -38,12 +38,16 @@ def create_utilisateur():
     if Utilisateur.query.filter_by(email=data['email']).first():
         return jsonify({'message': 'Email déjà utilisé'}), 409
 
+    raw_cid = data.get('conducteur_id')
+    conducteur_id = int(raw_cid) if raw_cid not in (None, '', 0, '0') else None
+
     u = Utilisateur(
         nom=data['nom'],
         prenom=data['prenom'],
         email=data['email'],
         role=data.get('role', 'conducteur'),
-        actif=data.get('actif', True)
+        actif=data.get('actif', True),
+        conducteur_id=conducteur_id
     )
     u.set_password(data['password'])
     db.session.add(u)
@@ -63,6 +67,10 @@ def update_utilisateur(id):
     for field in ['nom', 'prenom', 'email', 'role', 'actif']:
         if field in data:
             setattr(u, field, data[field])
+
+    if 'conducteur_id' in data:
+        raw_cid = data['conducteur_id']
+        u.conducteur_id = int(raw_cid) if raw_cid not in (None, '', 0, '0') else None
 
     if data.get('password'):
         u.set_password(data['password'])
