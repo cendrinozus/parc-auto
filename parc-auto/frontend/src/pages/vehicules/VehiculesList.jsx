@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { vehiculesService } from '../../services'
-import { Plus, Search, Eye, Pencil, Trash2 } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import { exportToPdf } from '../../utils/exportPdf'
+import { Plus, Search, Eye, Pencil, Trash2, FileDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const statutBadge = { actif: 'badge-actif', maintenance: 'badge-maintenance', hors_service: 'badge-hors_service' }
 const statutLabel = { actif: 'Actif', maintenance: 'Maintenance', hors_service: 'Hors service' }
 
 export default function VehiculesList() {
+  const { user } = useAuth()
+  const canWrite = ['admin', 'gestionnaire'].includes(user?.role)
   const [vehicules, setVehicules] = useState([])
   const [search, setSearch] = useState('')
   const [statut, setStatut] = useState('')
@@ -38,6 +42,26 @@ export default function VehiculesList() {
     `${v.immatriculation} ${v.marque} ${v.modele}`.toLowerCase().includes(search.toLowerCase())
   )
 
+  const statutLabel = { actif: 'Actif', maintenance: 'Maintenance', hors_service: 'Hors service' }
+
+  const handleExportPdf = () => {
+    exportToPdf({
+      title: 'Liste des véhicules',
+      subtitle: `${filtered.length} véhicule(s)${statut ? ' — Statut : ' + statutLabel[statut] : ''}`,
+      filename: 'vehicules.pdf',
+      columns: [
+        { header: 'Immatriculation', accessor: v => v.immatriculation },
+        { header: 'Marque',          accessor: v => v.marque },
+        { header: 'Modèle',          accessor: v => v.modele },
+        { header: 'Année',           accessor: v => v.annee },
+        { header: 'Carburant',       accessor: v => v.type_carburant },
+        { header: 'Kilométrage',     accessor: v => v.km_actuel?.toLocaleString() + ' km' },
+        { header: 'Statut',          accessor: v => statutLabel[v.statut] },
+      ],
+      rows: filtered,
+    })
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -45,9 +69,16 @@ export default function VehiculesList() {
           <h1 className="text-2xl font-bold text-gray-900">Véhicules</h1>
           <p className="text-sm text-gray-500">{vehicules.length} véhicule(s) au total</p>
         </div>
-        <Link to="/vehicules/nouveau" className="btn-primary flex items-center gap-2 w-fit">
-          <Plus size={16} /> Nouveau véhicule
-        </Link>
+        <div className="flex items-center gap-2">
+          <button onClick={handleExportPdf} disabled={filtered.length === 0} className="btn-secondary flex items-center gap-2">
+            <FileDown size={16} /> Exporter PDF
+          </button>
+          {canWrite && (
+            <Link to="/vehicules/nouveau" className="btn-primary flex items-center gap-2 w-fit">
+              <Plus size={16} /> Nouveau véhicule
+            </Link>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3">
@@ -92,8 +123,8 @@ export default function VehiculesList() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <Link to={`/vehicules/${v.id}`} className="text-cipres-600 hover:text-cipres-800"><Eye size={16} /></Link>
-                        <Link to={`/vehicules/${v.id}/modifier`} className="text-gray-500 hover:text-gray-700"><Pencil size={16} /></Link>
-                        <button onClick={() => handleDelete(v.id, v.immatriculation)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button>
+                        {canWrite && <Link to={`/vehicules/${v.id}/modifier`} className="text-gray-500 hover:text-gray-700"><Pencil size={16} /></Link>}
+                        {canWrite && <button onClick={() => handleDelete(v.id, v.immatriculation)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button>}
                       </div>
                     </td>
                   </tr>

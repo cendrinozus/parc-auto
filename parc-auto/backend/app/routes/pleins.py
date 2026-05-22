@@ -1,11 +1,17 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, get_jwt
 from app import db
 from app.models.plein import Plein
 from app.models.vehicule import Vehicule
 from app.models.conducteur import Conducteur
 
 pleins_bp = Blueprint('pleins', __name__)
+
+def gestionnaire_ou_admin_required():
+    role = get_jwt().get('role')
+    if role not in ('admin', 'gestionnaire'):
+        return jsonify({'message': 'Accès refusé'}), 403
+    return None
 
 def calculer_consommation(vehicule_id, km_actuel, litres, exclude_id=None):
     query = Plein.query.filter_by(vehicule_id=vehicule_id, plein_complet=True)
@@ -50,6 +56,8 @@ def get_plein(id):
 @pleins_bp.route('/', methods=['POST'])
 @jwt_required()
 def create_plein():
+    err = gestionnaire_ou_admin_required()
+    if err: return err
     identity = get_jwt_identity()
     data = request.get_json()
     required = ['vehicule_id', 'km_compteur', 'litres', 'prix_litre']
@@ -107,6 +115,8 @@ def create_plein():
 @pleins_bp.route('/<int:id>', methods=['PUT'])
 @jwt_required()
 def update_plein(id):
+    err = gestionnaire_ou_admin_required()
+    if err: return err
     from datetime import datetime
     p = Plein.query.get_or_404(id)
     data = request.get_json()
@@ -156,6 +166,8 @@ def update_plein(id):
 @pleins_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 def delete_plein(id):
+    err = gestionnaire_ou_admin_required()
+    if err: return err
     p = Plein.query.get_or_404(id)
     vehicule_id = p.vehicule_id
     db.session.delete(p)

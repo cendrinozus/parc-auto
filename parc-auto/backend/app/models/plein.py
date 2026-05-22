@@ -71,6 +71,7 @@ class Alerte(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     vehicule_id = db.Column(db.Integer, db.ForeignKey('vehicules.id'), nullable=False)
+    echeance_id = db.Column(db.Integer, db.ForeignKey('echeances_vehicule.id', ondelete='SET NULL'), nullable=True)
     type_alerte = db.Column(db.Enum('sur_consommation', 'entretien', 'permis_expire', 'autre'), nullable=False)
     message = db.Column(db.Text, nullable=False)
     seuil_valeur = db.Column(db.Float)
@@ -82,6 +83,7 @@ class Alerte(db.Model):
         return {
             'id': self.id,
             'vehicule_id': self.vehicule_id,
+            'echeance_id': self.echeance_id,
             'type_alerte': self.type_alerte,
             'message': self.message,
             'seuil_valeur': self.seuil_valeur,

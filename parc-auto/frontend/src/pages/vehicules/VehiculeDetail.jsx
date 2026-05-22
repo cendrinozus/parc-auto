@@ -1,14 +1,164 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { vehiculesService, pleinsService, rapportsService } from '../../services'
-import { ArrowLeft, Pencil, Fuel } from 'lucide-react'
+import { vehiculesService, pleinsService, rapportsService, echeancesService } from '../../services'
+import { useAuth } from '../../context/AuthContext'
+import { ArrowLeft, Pencil, Fuel, Plus, Trash2, CalendarClock } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+
+const TYPES_DOCUMENT = [
+  { value: 'visite_technique', label: 'Visite technique' },
+  { value: 'assurance',        label: 'Assurance' },
+  { value: 'tvm',              label: 'TVM' },
+  { value: 'carte_orange',     label: 'Carte orange' },
+]
+
+function echeanceStatut(dateStr) {
+  const today = new Date(); today.setHours(0,0,0,0)
+  const d = new Date(dateStr)
+  const diff = Math.round((d - today) / 86400000)
+  if (diff < 0) return { label: 'Expirée', cls: 'bg-red-100 text-red-700' }
+  if (diff <= 15) return { label: `${diff}j restants`, cls: 'bg-orange-100 text-orange-700' }
+  return { label: `${diff}j restants`, cls: 'bg-green-100 text-green-700' }
+}
+
+function EcheancesSection({ vehiculeId, isAdmin }) {
+  const [echeances, setEcheances] = useState([])
+  const [showForm, setShowForm] = useState(false)
+  const [form, setForm] = useState({ type_document: 'visite_technique', date_echeance: '', notes: '' })
+  const [editId, setEditId] = useState(null)
+  const [saving, setSaving] = useState(false)
+
+  const load = () => echeancesService.getByVehicule(vehiculeId).then(r => setEcheances(r.data)).catch(() => {})
+
+  useEffect(() => { load() }, [vehiculeId])
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setSaving(true)
+    try {
+      if (editId) {
+        await echeancesService.update(editId, form)
+        toast.success('Échéance mise à jour')
+      } else {
+        await echeancesService.create(vehiculeId, form)
+        toast.success('Échéance créée')
+      }
+      setForm({ type_document: 'visite_technique', date_echeance: '', notes: '' })
+      setEditId(null)
+      setShowForm(false)
+      load()
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Erreur')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleEdit = (ech) => {
+    setForm({ type_document: ech.type_document, date_echeance: ech.date_echeance, notes: ech.notes || '' })
+    setEditId(ech.id)
+    setShowForm(true)
+  }
+
+  const handleDelete = async (id) => {
+    if (!confirm('Supprimer cette échéance ?')) return
+    try {
+      await echeancesService.delete(id)
+      toast.success('Échéance supprimée')
+      load()
+    } catch { toast.error('Erreur') }
+  }
+
+  const cancel = () => {
+    setShowForm(false)
+    setEditId(null)
+    setForm({ type_document: 'visite_technique', date_echeance: '', notes: '' })
+  }
+
+  return (
+    <div className="card p-0 overflow-hidden">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+        <div className="flex items-center gap-2">
+          <div className="w-1 h-5 bg-cipres-600 rounded-full" />
+          <h2 className="text-base font-bold text-gray-800">Échéances documents</h2>
+        </div>
+        {isAdmin && (
+          <button onClick={() => { cancel(); setShowForm(p => !p) }} className="btn-primary text-xs flex items-center gap-1">
+            <Plus size={13} /> Ajouter
+          </button>
+        )}
+      </div>
+
+      {showForm && isAdmin && (
+        <form onSubmit={handleSubmit} className="px-6 py-4 border-b border-gray-100 bg-gray-50 space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="label">Type de document *</label>
+              <select className="input" value={form.type_document} onChange={e => setForm(p => ({ ...p, type_document: e.target.value }))} required>
+                {TYPES_DOCUMENT.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="label">Date d'échéance *</label>
+              <input type="date" className="input" required value={form.date_echeance} onChange={e => setForm(p => ({ ...p, date_echeance: e.target.value }))} />
+            </div>
+            <div className="col-span-2">
+              <label className="label">Notes</label>
+              <input className="input" value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Optionnel" />
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <button type="submit" disabled={saving} className="btn-primary text-sm py-1.5 px-3">
+              {saving ? 'Enregistrement...' : (editId ? 'Mettre à jour' : 'Créer')}
+            </button>
+            <button type="button" onClick={cancel} className="btn-secondary text-sm py-1.5 px-3">Annuler</button>
+          </div>
+        </form>
+      )}
+
+      <div className="divide-y divide-gray-100">
+        {echeances.length === 0 && (
+          <p className="px-6 py-5 text-sm text-gray-400">Aucune échéance enregistrée.</p>
+        )}
+        {echeances.map(ech => {
+          const statut = echeanceStatut(ech.date_echeance)
+          return (
+            <div key={ech.id} className="px-6 py-3 flex items-center gap-4">
+              <CalendarClock size={16} className="text-cipres-500 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="font-semibold text-gray-800 text-sm">{ech.label}</p>
+                <p className="text-xs text-gray-500">
+                  {new Date(ech.date_echeance).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  {ech.notes && ` · ${ech.notes}`}
+                </p>
+              </div>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${statut.cls}`}>{statut.label}</span>
+              {isAdmin && (
+                <div className="flex items-center gap-2">
+                  <button onClick={() => handleEdit(ech)} className="text-cipres-400 hover:text-cipres-700" title="Modifier">
+                    <Pencil size={14} />
+                  </button>
+                  <button onClick={() => handleDelete(ech.id)} className="text-red-400 hover:text-red-600" title="Supprimer">
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 export default function VehiculeDetail() {
   const { id } = useParams()
+  const { user } = useAuth()
   const [stats, setStats] = useState(null)
   const [pleins, setPleins] = useState([])
   const [evolution, setEvolution] = useState([])
+  const isAdmin = user?.role === 'admin'
 
   useEffect(() => {
     vehiculesService.getStats(id).then(r => setStats(r.data)).catch(() => {})
@@ -76,6 +226,8 @@ export default function VehiculeDetail() {
           </ResponsiveContainer>
         </div>
       )}
+
+      <EcheancesSection vehiculeId={id} isAdmin={isAdmin} />
 
       <div className="card p-0 overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">

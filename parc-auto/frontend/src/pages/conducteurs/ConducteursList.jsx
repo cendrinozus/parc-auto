@@ -1,10 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { conducteursService } from '../../services'
-import { Plus, Search, Pencil, Trash2 } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import { exportToPdf } from '../../utils/exportPdf'
+import { Plus, Search, Pencil, Trash2, FileDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function ConducteursList() {
+  const { user } = useAuth()
+  const canWrite = ['admin', 'gestionnaire'].includes(user?.role)
   const [conducteurs, setConducteurs] = useState([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
@@ -27,6 +31,23 @@ export default function ConducteursList() {
     `${c.nom} ${c.prenom} ${c.numero_permis}`.toLowerCase().includes(search.toLowerCase())
   )
 
+  const handleExportPdf = () => {
+    exportToPdf({
+      title: 'Liste des conducteurs',
+      subtitle: `${filtered.length} conducteur(s)`,
+      filename: 'conducteurs.pdf',
+      columns: [
+        { header: 'Nom',              accessor: c => `${c.nom} ${c.prenom}` },
+        { header: 'N° Permis',        accessor: c => c.numero_permis },
+        { header: 'Expiration permis', accessor: c => c.date_expiration_permis ? new Date(c.date_expiration_permis).toLocaleDateString('fr-FR') : null },
+        { header: 'Téléphone',        accessor: c => c.telephone },
+        { header: 'Email',            accessor: c => c.email },
+        { header: 'Statut',           accessor: c => c.actif ? 'Actif' : 'Inactif' },
+      ],
+      rows: filtered,
+    })
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -34,9 +55,16 @@ export default function ConducteursList() {
           <h1 className="text-2xl font-bold text-gray-900">Conducteurs</h1>
           <p className="text-sm text-gray-500">{conducteurs.length} conducteur(s)</p>
         </div>
-        <Link to="/conducteurs/nouveau" className="btn-primary flex items-center gap-2 w-fit">
-          <Plus size={16} /> Nouveau conducteur
-        </Link>
+        <div className="flex items-center gap-2">
+          <button onClick={handleExportPdf} disabled={filtered.length === 0} className="btn-secondary flex items-center gap-2">
+            <FileDown size={16} /> Exporter PDF
+          </button>
+          {canWrite && (
+            <Link to="/conducteurs/nouveau" className="btn-primary flex items-center gap-2 w-fit">
+              <Plus size={16} /> Nouveau conducteur
+            </Link>
+          )}
+        </div>
       </div>
       <div className="relative max-w-sm">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
@@ -73,10 +101,12 @@ export default function ConducteursList() {
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <Link to={`/conducteurs/${c.id}/modifier`} className="text-gray-500 hover:text-cipres-600"><Pencil size={16} /></Link>
-                        <button onClick={() => handleDelete(c.id, `${c.prenom} ${c.nom}`)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button>
-                      </div>
+                      {canWrite && (
+                        <div className="flex items-center gap-2">
+                          <Link to={`/conducteurs/${c.id}/modifier`} className="text-gray-500 hover:text-cipres-600"><Pencil size={16} /></Link>
+                          <button onClick={() => handleDelete(c.id, `${c.prenom} ${c.nom}`)} className="text-red-400 hover:text-red-600"><Trash2 size={16} /></button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}

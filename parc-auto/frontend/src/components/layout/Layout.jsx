@@ -1,25 +1,27 @@
-import { Outlet, NavLink, useNavigate } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useState, useEffect } from 'react'
 import { alertesService } from '../../services'
 import {
   LayoutDashboard, Car, Users, Fuel, BarChart3,
-  Bell, LogOut, Menu, UserCog, Settings, ClipboardList, BookOpen
+  Bell, LogOut, Menu, UserCog, Settings, ClipboardList, BookOpen, Wrench
 } from 'lucide-react'
 import logoCipres from '../../assets/logo-cipres.png'
 
 const navItems = [
   { to: '/dashboard',   label: 'Tableau de bord', icon: LayoutDashboard },
+  { to: '/releves',     label: 'Mes relevés',      icon: ClipboardList },
+  { to: '/pleins',      label: 'Pleins carburant', icon: Fuel },
+  { to: '/entretiens',  label: 'Entretiens',       icon: Wrench },
   { to: '/vehicules',   label: 'Véhicules',        icon: Car },
   { to: '/conducteurs', label: 'Conducteurs',      icon: Users },
-  { to: '/pleins',      label: 'Pleins carburant',  icon: Fuel },
-  { to: '/releves',     label: 'Mes relevés',       icon: ClipboardList },
-  { to: '/rapports',    label: 'Rapports',          icon: BarChart3 },
-  { to: '/alertes',     label: 'Alertes',           icon: Bell },
+  { to: '/rapports',    label: 'Rapports',         icon: BarChart3 },
 ]
 
-const adminNavItems = [
+const gestionnaireNavItems = [
   { to: '/releves/tous', label: 'Relevés conducteurs', icon: BookOpen },
+]
+const adminNavItems = [
   { to: '/utilisateurs', label: 'Utilisateurs', icon: UserCog },
   { to: '/parametres',   label: 'Paramètres',   icon: Settings },
 ]
@@ -43,12 +45,12 @@ export default function Layout() {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="bg-cipres-600 px-6 py-4 flex-shrink-0">
+      <div className="px-5 py-5 flex-shrink-0 border-b border-cipres-800">
         <div className="flex items-center gap-3">
-          <img src={logoCipres} alt="CIPRES" className="w-10 h-10 object-contain" />
-          <div>
-            <span className="text-white font-bold text-lg leading-none">ParcAuto</span>
-            <p className="text-cipres-200 text-xs mt-0.5">Gestion du parc — CIPRES</p>
+          <img src={logoCipres} alt="CIPRES" className="w-9 h-9 object-contain rounded-lg" />
+          <div className="leading-tight">
+            <p className="text-white font-bold text-base tracking-wide">ParcAuto</p>
+            <p className="text-cipres-400 text-[11px]">CIPRES — Gestion du parc</p>
           </div>
         </div>
       </div>
@@ -78,12 +80,29 @@ export default function Layout() {
           </NavLink>
         ))}
 
-        {user?.role === 'admin' && (
+        {['admin', 'gestionnaire'].includes(user?.role) && (
           <>
             <div className="pt-3 pb-1 px-3">
               <p className="text-xs font-semibold text-cipres-500 uppercase tracking-wider">Administration</p>
             </div>
-            {adminNavItems.map(({ to, label, icon: Icon }) => (
+            {gestionnaireNavItems.map(({ to, label, icon: Icon }) => (
+              <NavLink
+                key={to}
+                to={to}
+                onClick={() => setSidebarOpen(false)}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                    isActive
+                      ? 'bg-cipres-600 text-white shadow-sm'
+                      : 'text-cipres-200 hover:bg-cipres-800 hover:text-white'
+                  }`
+                }
+              >
+                <Icon size={18} className="flex-shrink-0" />
+                <span className="flex-1">{label}</span>
+              </NavLink>
+            ))}
+            {user?.role === 'admin' && adminNavItems.map(({ to, label, icon: Icon }) => (
               <NavLink
                 key={to}
                 to={to}
@@ -144,13 +163,31 @@ export default function Layout() {
       )}
 
       <div className="flex flex-col flex-1 overflow-hidden">
-        {/* Header mobile */}
-        <header className="md:hidden bg-cipres-600 px-4 py-3 flex items-center gap-3 shadow-md">
-          <button onClick={() => setSidebarOpen(true)} className="text-white">
-            <Menu size={22} />
+        {/* Header */}
+        <header className="bg-cipres-900 px-4 h-10 flex items-center justify-between flex-shrink-0">
+          {/* Burger mobile */}
+          <button onClick={() => setSidebarOpen(true)} className="md:hidden text-cipres-300 hover:text-white">
+            <Menu size={20} />
           </button>
-          <img src={logoCipres} alt="CIPRES" className="w-7 h-7 object-contain" />
-          <span className="font-bold text-white">ParcAuto</span>
+          <div className="md:hidden flex items-center gap-2">
+            <img src={logoCipres} alt="CIPRES" className="w-5 h-5 object-contain" />
+            <span className="font-bold text-white text-sm">ParcAuto</span>
+          </div>
+          <div className="hidden md:block" />
+
+          {/* Cloche alertes */}
+          <Link
+            to="/alertes"
+            className="relative flex items-center justify-center w-7 h-7 rounded-full hover:bg-cipres-800 transition-colors"
+            title="Alertes"
+          >
+            <Bell size={17} className={alertCount > 0 ? 'text-amber-400' : 'text-cipres-400'} />
+            {alertCount > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] rounded-full min-w-[16px] h-4 flex items-center justify-center font-bold px-0.5 leading-none">
+                {alertCount > 99 ? '99+' : alertCount}
+              </span>
+            )}
+          </Link>
         </header>
 
         <main className="flex-1 overflow-auto p-4 md:p-6">

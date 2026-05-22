@@ -56,6 +56,23 @@ export const parametresService = {
   update: (data) => api.put('/parametres/', data)
 }
 
+export const entretiensService = {
+  getAll: (params) => api.get('/entretiens/', { params }),
+  getById: (id) => api.get(`/entretiens/${id}`),
+  create: (data) => api.post('/entretiens/', data),
+  update: (id, data) => api.put(`/entretiens/${id}`, data),
+  delete: (id) => api.delete(`/entretiens/${id}`)
+}
+
+export const echeancesService = {
+  getByVehicule: (vehiculeId) => api.get(`/echeances/vehicule/${vehiculeId}`),
+  create: (vehiculeId, data) => api.post(`/echeances/vehicule/${vehiculeId}`, data),
+  update: (id, data) => api.put(`/echeances/${id}`, data),
+  delete: (id) => api.delete(`/echeances/${id}`),
+  verifier: (force = false) => api.post('/echeances/verifier', { force }),
+  testerEmail: () => api.post('/echeances/tester-email')
+}
+
 export const relevesService = {
   getAujourdhui: () => api.get('/releves/aujourd-hui'),
   getHistorique: () => api.get('/releves/historique'),

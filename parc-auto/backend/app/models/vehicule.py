@@ -22,6 +22,7 @@ class Vehicule(db.Model):
     pleins = db.relationship('Plein', backref='vehicule', lazy=True, cascade='all, delete-orphan')
     affectations = db.relationship('Affectation', backref='vehicule', lazy=True, cascade='all, delete-orphan')
     alertes = db.relationship('Alerte', backref='vehicule', lazy=True, cascade='all, delete-orphan')
+    echeances = db.relationship('EcheanceVehicule', backref='vehicule', lazy=True, cascade='all, delete-orphan')
 
     def to_dict(self):
         return {

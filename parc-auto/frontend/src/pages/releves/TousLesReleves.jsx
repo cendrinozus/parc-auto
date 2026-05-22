@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { relevesService } from '../../services'
+import { exportToPdf } from '../../utils/exportPdf'
 import toast from 'react-hot-toast'
-import { Search, ChevronDown, ChevronUp } from 'lucide-react'
+import { Search, ChevronDown, ChevronUp, FileDown } from 'lucide-react'
 
 const today = new Date().toISOString().slice(0, 10)
 const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
@@ -100,11 +101,36 @@ export default function TousLesReleves() {
     )
   })
 
+  const handleExportPdf = () => {
+    const periode = toutAfficher ? 'Tous les relevés' : `${dateDebut} → ${dateFin}`
+    exportToPdf({
+      title: 'Relevés journaliers — Tous conducteurs',
+      subtitle: `${relevesFiltres.length} relevé(s) · Période : ${periode}`,
+      filename: `releves_${toutAfficher ? 'complet' : dateDebut + '_' + dateFin}.pdf`,
+      columns: [
+        { header: 'Date',          accessor: r => new Date(r.date).toLocaleDateString('fr-FR') },
+        { header: 'Conducteur',    accessor: r => r.conducteur_nom },
+        { header: 'Véhicule',      accessor: r => r.vehicule_info },
+        { header: 'Km début',      accessor: r => r.km_debut != null ? String(r.km_debut) : null },
+        { header: 'Km fin',        accessor: r => r.km_fin != null ? String(r.km_fin) : null },
+        { header: 'Km parcourus',  accessor: r => r.km_fin != null && r.km_debut != null ? String((r.km_fin - r.km_debut).toFixed(1)) : null },
+        { header: 'Statut',        accessor: r => r.statut === 'clos' ? 'Clôturé' : 'En cours' },
+        { header: 'Observations',  accessor: r => r.observations },
+      ],
+      rows: relevesFiltres,
+    })
+  }
+
   return (
     <div className="max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-gray-800">Relevés journaliers</h1>
-        <p className="text-gray-500 text-sm mt-0.5">Historique de tous les conducteurs</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-800">Relevés journaliers</h1>
+          <p className="text-gray-500 text-sm mt-0.5">Historique de tous les conducteurs</p>
+        </div>
+        <button onClick={handleExportPdf} disabled={relevesFiltres.length === 0} className="btn-secondary flex items-center gap-2 w-fit">
+          <FileDown size={16} /> Exporter PDF
+        </button>
       </div>
 
       {/* Filtres */}

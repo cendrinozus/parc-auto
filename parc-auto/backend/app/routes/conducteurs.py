@@ -1,11 +1,17 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt
 from app import db
 from app.models.conducteur import Conducteur
 from app.models.plein import Affectation
 from app.models.vehicule import Vehicule
 
 conducteurs_bp = Blueprint('conducteurs', __name__)
+
+def gestionnaire_ou_admin_required():
+    role = get_jwt().get('role')
+    if role not in ('admin', 'gestionnaire'):
+        return jsonify({'message': 'Accès refusé'}), 403
+    return None
 
 @conducteurs_bp.route('/', methods=['GET'])
 @jwt_required()
@@ -26,6 +32,8 @@ def get_conducteur(id):
 @conducteurs_bp.route('/', methods=['POST'])
 @jwt_required()
 def create_conducteur():
+    err = gestionnaire_ou_admin_required()
+    if err: return err
     data = request.get_json()
     required = ['nom', 'prenom', 'numero_permis']
     if not all(data.get(f) for f in required):
@@ -50,6 +58,8 @@ def create_conducteur():
 @conducteurs_bp.route('/<int:id>', methods=['PUT'])
 @jwt_required()
 def update_conducteur(id):
+    err = gestionnaire_ou_admin_required()
+    if err: return err
     c = Conducteur.query.get_or_404(id)
     data = request.get_json()
     from datetime import datetime
@@ -64,6 +74,8 @@ def update_conducteur(id):
 @conducteurs_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 def delete_conducteur(id):
+    err = gestionnaire_ou_admin_required()
+    if err: return err
     c = Conducteur.query.get_or_404(id)
     db.session.delete(c)
     db.session.commit()

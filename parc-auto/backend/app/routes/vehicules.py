@@ -1,9 +1,15 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import jwt_required
+from flask_jwt_extended import jwt_required, get_jwt
 from app import db
 from app.models.vehicule import Vehicule
 
 vehicules_bp = Blueprint('vehicules', __name__)
+
+def gestionnaire_ou_admin_required():
+    role = get_jwt().get('role')
+    if role not in ('admin', 'gestionnaire'):
+        return jsonify({'message': 'Accès refusé'}), 403
+    return None
 
 @vehicules_bp.route('/', methods=['GET'])
 @jwt_required()
@@ -27,6 +33,8 @@ def get_vehicule(id):
 @vehicules_bp.route('/', methods=['POST'])
 @jwt_required()
 def create_vehicule():
+    err = gestionnaire_ou_admin_required()
+    if err: return err
     data = request.get_json()
     required = ['immatriculation', 'marque', 'modele', 'annee', 'type_carburant']
     if not all(data.get(f) for f in required):
@@ -55,6 +63,8 @@ def create_vehicule():
 @vehicules_bp.route('/<int:id>', methods=['PUT'])
 @jwt_required()
 def update_vehicule(id):
+    err = gestionnaire_ou_admin_required()
+    if err: return err
     v = Vehicule.query.get_or_404(id)
     data = request.get_json()
     for field in ['marque', 'modele', 'annee', 'type_carburant', 'km_actuel', 'statut', 'categorie', 'couleur', 'numero_serie']:
@@ -66,6 +76,8 @@ def update_vehicule(id):
 @vehicules_bp.route('/<int:id>', methods=['DELETE'])
 @jwt_required()
 def delete_vehicule(id):
+    err = gestionnaire_ou_admin_required()
+    if err: return err
     v = Vehicule.query.get_or_404(id)
     db.session.delete(v)
     db.session.commit()

@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { pleinsService, vehiculesService } from '../../services'
-import { Plus, Trash2, Pencil } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import { exportToPdf } from '../../utils/exportPdf'
+import { Plus, Trash2, Pencil, FileDown } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const ANNEE_COURANTE = new Date().getFullYear()
 const ANNEES = Array.from({ length: 5 }, (_, i) => ANNEE_COURANTE - i)
 
 export default function PleinsList() {
+  const { user } = useAuth()
+  const canWrite = ['admin', 'gestionnaire'].includes(user?.role)
   const navigate = useNavigate()
   const [pleins, setPleins] = useState([])
   const [vehicules, setVehicules] = useState([])
@@ -40,6 +44,28 @@ export default function PleinsList() {
   const totalCout = pleinsFiltres.reduce((s, p) => s + (p.cout_total || 0), 0)
   const totalLitres = pleinsFiltres.reduce((s, p) => s + (p.litres || 0), 0)
 
+  const handleExportPdf = () => {
+    const vehiculeLabel = vehiculeFilter
+      ? vehicules.find(v => String(v.id) === String(vehiculeFilter))?.immatriculation || ''
+      : 'Tous véhicules'
+    exportToPdf({
+      title: `Pleins carburant — ${anneeFilter || 'Toutes années'} — ${vehiculeLabel}`,
+      subtitle: `${pleinsFiltres.length} enregistrement(s) · ${totalLitres.toFixed(1)} L · ${totalCout.toFixed(0)} FCFA`,
+      filename: `pleins_${anneeFilter || 'tous'}.pdf`,
+      columns: [
+        { header: 'Date',       accessor: p => new Date(p.date_plein).toLocaleDateString('fr-FR') },
+        { header: 'Véhicule',   accessor: p => p.vehicule_immat },
+        { header: 'Conducteur', accessor: p => p.conducteur_nom },
+        { header: 'Km compteur', accessor: p => p.km_compteur?.toLocaleString() + ' km' },
+        { header: 'Litres',     accessor: p => p.litres + ' L' },
+        { header: 'Prix/L',     accessor: p => p.prix_litre + ' FCFA' },
+        { header: 'Coût total', accessor: p => p.cout_total + ' FCFA' },
+        { header: 'L/100km',    accessor: p => p.consommation_100km ? p.consommation_100km + ' L/100' : null },
+      ],
+      rows: pleinsFiltres,
+    })
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -49,9 +75,16 @@ export default function PleinsList() {
             {pleinsFiltres.length} enregistrement(s) · {totalLitres.toFixed(1)} L · {totalCout.toFixed(0)} FCFA
           </p>
         </div>
-        <Link to="/pleins/nouveau" className="btn-primary flex items-center gap-2 w-fit">
-          <Plus size={16} /> Nouveau plein
-        </Link>
+        <div className="flex items-center gap-2">
+          <button onClick={handleExportPdf} disabled={pleinsFiltres.length === 0} className="btn-secondary flex items-center gap-2">
+            <FileDown size={16} /> Exporter PDF
+          </button>
+          {canWrite && (
+            <Link to="/pleins/nouveau" className="btn-primary flex items-center gap-2 w-fit">
+              <Plus size={16} /> Nouveau plein
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Filtres */}
@@ -97,10 +130,12 @@ export default function PleinsList() {
                       ) : '—'}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => navigate(`/pleins/${p.id}/modifier`)} className="text-cipres-400 hover:text-cipres-700" title="Modifier"><Pencil size={15} /></button>
-                        <button onClick={() => handleDelete(p.id)} className="text-red-400 hover:text-red-600" title="Supprimer"><Trash2 size={15} /></button>
-                      </div>
+                      {canWrite && (
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => navigate(`/pleins/${p.id}/modifier`)} className="text-cipres-400 hover:text-cipres-700" title="Modifier"><Pencil size={15} /></button>
+                          <button onClick={() => handleDelete(p.id)} className="text-red-400 hover:text-red-600" title="Supprimer"><Trash2 size={15} /></button>
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ))}
