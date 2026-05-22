@@ -49,19 +49,23 @@ def upgrade():
         )
 
     # Nouveaux paramètres
-    op.execute("""
-        INSERT INTO parametres (cle, valeur, description) VALUES
-        ('alerte_stade_1', '15', 'Premier seuil d\'alerte avant échéance (jours)'),
-        ('alerte_stade_2', '5',  'Deuxième seuil d\'alerte avant échéance (jours)'),
-        ('alerte_stade_3', '1',  'Troisième seuil d\'alerte avant échéance (jours)'),
-        ('emails_admins', '', 'Adresses email des administrateurs (séparées par des virgules)'),
+    parametres = [
+        ('alerte_stade_1', '15', 'Premier seuil alerte avant echeance (jours)'),
+        ('alerte_stade_2', '5',  'Deuxieme seuil alerte avant echeance (jours)'),
+        ('alerte_stade_3', '1',  'Troisieme seuil alerte avant echeance (jours)'),
+        ('emails_admins', '', 'Adresses email des administrateurs'),
         ('smtp_host', '', 'Serveur SMTP'),
         ('smtp_port', '587', 'Port SMTP'),
         ('smtp_user', '', 'Identifiant SMTP'),
         ('smtp_password', '', 'Mot de passe SMTP'),
-        ('smtp_from', '', 'Adresse expéditeur des emails')
-        ON DUPLICATE KEY UPDATE cle=cle
-    """)
+        ('smtp_from', '', 'Adresse expediteur des emails'),
+    ]
+    conn = op.get_bind()
+    for cle, valeur, description in parametres:
+        conn.execute(
+            sa.text("INSERT INTO parametres (cle, valeur, description) VALUES (:cle, :valeur, :description) ON DUPLICATE KEY UPDATE cle=cle"),
+            {"cle": cle, "valeur": valeur, "description": description}
+        )
 
 
 def downgrade():
