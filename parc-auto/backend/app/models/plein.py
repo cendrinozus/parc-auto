@@ -9,10 +9,10 @@ class Plein(db.Model):
     conducteur_id = db.Column(db.Integer, db.ForeignKey('conducteurs.id'), nullable=True)
     utilisateur_id = db.Column(db.Integer, db.ForeignKey('utilisateurs.id'))
     date_plein = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    km_compteur = db.Column(db.Float, nullable=False)
-    litres = db.Column(db.Float, nullable=False)
-    prix_litre = db.Column(db.Float, nullable=False)
-    cout_total = db.Column(db.Float, nullable=False)
+    km_compteur = db.Column(db.Numeric(10, 2), nullable=False)
+    litres = db.Column(db.Numeric(10, 3), nullable=False)
+    prix_litre = db.Column(db.Numeric(10, 2), nullable=False)
+    cout_total = db.Column(db.Numeric(12, 2), nullable=False)
     station = db.Column(db.String(150))
     type_carburant = db.Column(db.String(50))
     motif = db.Column(db.String(200))
@@ -28,10 +28,10 @@ class Plein(db.Model):
             'conducteur_id': self.conducteur_id,
             'utilisateur_id': self.utilisateur_id,
             'date_plein': self.date_plein.isoformat(),
-            'km_compteur': self.km_compteur,
-            'litres': self.litres,
-            'prix_litre': self.prix_litre,
-            'cout_total': self.cout_total,
+            'km_compteur': float(self.km_compteur) if self.km_compteur is not None else None,
+            'litres': float(self.litres) if self.litres is not None else None,
+            'prix_litre': float(self.prix_litre) if self.prix_litre is not None else None,
+            'cout_total': float(self.cout_total) if self.cout_total is not None else None,
             'station': self.station,
             'type_carburant': self.type_carburant,
             'motif': self.motif,
