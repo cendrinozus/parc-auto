@@ -15,10 +15,18 @@ function StatutBadge({ statut }) {
   return <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">En cours</span>
 }
 
-function VehiculeCard({ vehicule, releve, onRefresh }) {
+function VehiculeCard({ vehicule, releve, historique, onRefresh }) {
   const [startForm, setStartForm] = useState({ km_debut: '', observations: '' })
   const [closeForm, setCloseForm] = useState({ km_fin: '', observations: '' })
   const [submitting, setSubmitting] = useState(false)
+
+  useEffect(() => {
+    if (releve) return
+    const dernier = [...historique]
+      .filter(r => r.vehicule_id === vehicule.id && r.km_fin != null)
+      .sort((a, b) => new Date(b.date) - new Date(a.date))[0]
+    if (dernier) setStartForm(p => ({ ...p, km_debut: String(dernier.km_fin) }))
+  }, [historique, vehicule.id, releve])
 
   const setStart = (k, v) => setStartForm(p => ({ ...p, [k]: v }))
   const setClose = (k, v) => setCloseForm(p => ({ ...p, [k]: v }))
@@ -279,6 +287,7 @@ export default function MesReleves() {
           key={v.id}
           vehicule={v}
           releve={getReleveForVehicule(v.id)}
+          historique={historique}
           onRefresh={fetchData}
         />
       ))}
