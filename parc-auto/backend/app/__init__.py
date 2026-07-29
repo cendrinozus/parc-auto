@@ -60,7 +60,7 @@ def create_app(config_name='default'):
             scheduler.add_job(
                 func=lambda: verifier_et_alerter(app),
                 trigger='cron',
-                hour=8,
+                hour=6,
                 minute=0,
                 id='check_echeances',
                 replace_existing=True

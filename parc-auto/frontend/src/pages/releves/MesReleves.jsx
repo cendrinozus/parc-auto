@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../../context/AuthContext'
-import { relevesService } from '../../services'
+import { relevesService, vehiculesService, conducteursService } from '../../services'
 import toast from 'react-hot-toast'
-import { Info, ChevronDown, ChevronUp } from 'lucide-react'
+import { Info, ChevronDown, ChevronUp, UserCheck, Car } from 'lucide-react'
 
 const todayFr = new Date().toLocaleDateString('fr-FR', {
   weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
@@ -15,7 +15,7 @@ function StatutBadge({ statut }) {
   return <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">En cours</span>
 }
 
-function VehiculeCard({ vehicule, releve, historique, onRefresh }) {
+function VehiculeCard({ vehicule, releve, historique, onRefresh, conducteurId }) {
   const [startForm, setStartForm] = useState({ km_debut: '', observations: '' })
   const [closeForm, setCloseForm] = useState({ km_fin: '', observations: '' })
   const [submitting, setSubmitting] = useState(false)
@@ -38,7 +38,8 @@ function VehiculeCard({ vehicule, releve, historique, onRefresh }) {
       await relevesService.create({
         vehicule_id: vehicule.id,
         km_debut: startForm.km_debut ? parseFloat(startForm.km_debut) : null,
-        observations: startForm.observations || null
+        observations: startForm.observations || null,
+        ...(conducteurId ? { conducteur_id: conducteurId } : {})
       })
       toast.success('Journée démarrée')
       onRefresh()
@@ -73,7 +74,6 @@ function VehiculeCard({ vehicule, releve, historique, onRefresh }) {
 
   return (
     <div className="card p-0 overflow-hidden">
-      {/* Card header */}
       <div className="bg-cipres-600 px-5 py-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <span className="font-bold text-white text-base">{vehicule.immatriculation}</span>
@@ -83,10 +83,9 @@ function VehiculeCard({ vehicule, releve, historique, onRefresh }) {
       </div>
 
       <div className="p-5 space-y-5">
-        {/* STATE: no releve */}
         {!releve && (
           <form onSubmit={handleStart} className="space-y-4">
-            <p className="text-sm text-gray-500">Aucun relevé pour ce véhicule aujourd'hui. Démarrez votre journée.</p>
+            <p className="text-sm text-gray-500">Aucun relevé pour ce véhicule aujourd'hui.</p>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="label">Kilométrage de départ *</label>
@@ -116,15 +115,11 @@ function VehiculeCard({ vehicule, releve, historique, onRefresh }) {
           </form>
         )}
 
-        {/* STATE: en_cours */}
         {releve && releve.statut === 'en_cours' && (
           <>
-            {/* Info bar */}
             <div className="flex gap-6 text-sm text-gray-600 bg-gray-50 rounded-lg px-4 py-3">
               <span><span className="font-medium">Km départ :</span> {releve.km_debut ?? '—'}</span>
             </div>
-
-            {/* Clôturer */}
             <div className="border-t pt-4">
               <h3 className="font-semibold text-gray-700 mb-3">Clôturer la journée</h3>
               <form onSubmit={handleClose} className="space-y-3">
@@ -158,7 +153,6 @@ function VehiculeCard({ vehicule, releve, historique, onRefresh }) {
           </>
         )}
 
-        {/* STATE: clos */}
         {releve && releve.statut === 'clos' && (
           <div className="space-y-4">
             <div className="bg-gray-50 rounded-lg px-4 py-3 space-y-1 text-sm">
@@ -169,7 +163,6 @@ function VehiculeCard({ vehicule, releve, historique, onRefresh }) {
                 <p className="text-cipres-700 font-semibold">Parcourus : {kmParcourus} km</p>
               )}
             </div>
-
             {releve.observations && (
               <p className="text-sm text-gray-600"><span className="font-medium">Observations :</span> {releve.observations}</p>
             )}
@@ -206,13 +199,145 @@ function HistoriqueRow({ releve }) {
         <StatutBadge statut={releve.statut} />
         {open ? <ChevronUp size={16} className="text-gray-400 flex-shrink-0" /> : <ChevronDown size={16} className="text-gray-400 flex-shrink-0" />}
       </button>
-      {open && releve.observations && (
+      {open && (
         <div className="px-5 pb-3 text-sm text-gray-600">
-          <span className="font-medium">Observations :</span> {releve.observations}
+          {releve.observations
+            ? <><span className="font-medium">Observations :</span> {releve.observations}</>
+            : <span className="italic text-gray-400">Aucune observation.</span>}
         </div>
       )}
-      {open && !releve.observations && (
-        <div className="px-5 pb-3 text-sm text-gray-400 italic">Aucune observation.</div>
+    </div>
+  )
+}
+
+// Section admin : saisir les relevés par véhicule
+function AdminReleves() {
+  const [tousVehicules, setTousVehicules] = useState([])
+  const [selectedVehiculeId, setSelectedVehiculeId] = useState('')
+  const [vehicule, setVehicule] = useState(null)
+  const [releve, setReleve] = useState(null)
+  const [conducteurId, setConducteurId] = useState(null)
+  const [conducteurNom, setConducteurNom] = useState(null)
+  const [historique, setHistorique] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [showHistorique, setShowHistorique] = useState(false)
+
+  useEffect(() => {
+    vehiculesService.getAll({ statut: 'actif' })
+      .then(res => setTousVehicules(res.data))
+      .catch(() => {})
+  }, [])
+
+  const fetchPourVehicule = useCallback(async (vehiculeId) => {
+    setLoading(true)
+    try {
+      const [aujourdhuiRes, historiqueRes] = await Promise.all([
+        relevesService.getAujourdhui({ vehicule_id: vehiculeId }),
+        relevesService.getHistorique({ vehicule_id: vehiculeId })
+      ])
+      const veh = aujourdhuiRes.data.vehicules[0] || null
+      const rel = aujourdhuiRes.data.releves[0] || null
+      // Priorité : affectation active > conducteur du relevé existant aujourd'hui
+      const cid = aujourdhuiRes.data.conducteur_id || (rel ? rel.conducteur_id : null)
+      const cnom = aujourdhuiRes.data.conducteur_nom || null
+      setVehicule(veh)
+      setReleve(rel)
+      setConducteurId(cid)
+      setConducteurNom(cnom)
+      setHistorique(historiqueRes.data)
+    } catch {
+      toast.error('Erreur lors du chargement')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const handleSelectVehicule = (e) => {
+    const id = e.target.value
+    setSelectedVehiculeId(id)
+    setVehicule(null)
+    setReleve(null)
+    setConducteurId(null)
+    setConducteurNom(null)
+    setHistorique([])
+    setShowHistorique(false)
+    if (id) fetchPourVehicule(parseInt(id))
+  }
+
+  const today = new Date().toISOString().slice(0, 10)
+  const historiqueFiltre = historique.filter(r => r.date !== today)
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+        <Car size={18} className="text-amber-600 flex-shrink-0" />
+        <span className="text-sm font-medium text-amber-800">Mode administrateur — Saisie par véhicule</span>
+      </div>
+
+      <div>
+        <label className="label">Véhicule</label>
+        <select className="input" value={selectedVehiculeId} onChange={handleSelectVehicule}>
+          <option value="">— Choisir un véhicule —</option>
+          {tousVehicules.map(v => (
+            <option key={v.id} value={v.id}>
+              {v.immatriculation} — {v.marque} {v.modele}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {selectedVehiculeId && loading && (
+        <p className="text-gray-500 text-sm">Chargement...</p>
+      )}
+
+      {/* Conducteur affiché en lecture seule */}
+      {selectedVehiculeId && !loading && conducteurNom && (
+        <div className="flex items-center gap-3 bg-gray-50 border border-gray-200 rounded-lg px-4 py-3">
+          <UserCheck size={16} className="text-cipres-600 flex-shrink-0" />
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold">Conducteur affecté</p>
+            <p className="font-semibold text-gray-800">{conducteurNom}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Aucune affectation */}
+      {selectedVehiculeId && !loading && !conducteurId && (
+        <div className="flex items-center gap-2 text-sm text-orange-700 bg-orange-50 border border-orange-200 rounded-lg px-4 py-3">
+          <Info size={15} className="flex-shrink-0" />
+          <span>Aucun conducteur affecté à ce véhicule. Affectez-en un depuis la page Conducteurs.</span>
+        </div>
+      )}
+
+      {/* Carte relevé */}
+      {selectedVehiculeId && !loading && vehicule && conducteurId && (
+        <VehiculeCard
+          vehicule={vehicule}
+          releve={releve}
+          historique={historique}
+          conducteurId={conducteurId}
+          onRefresh={() => fetchPourVehicule(parseInt(selectedVehiculeId))}
+        />
+      )}
+
+      {/* Historique du véhicule */}
+      {selectedVehiculeId && !loading && historiqueFiltre.length > 0 && (
+        <div className="card p-0 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setShowHistorique(p => !p)}
+            className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+          >
+            <h2 className="font-bold text-gray-800">Historique du véhicule</h2>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">{historiqueFiltre.length} relevé{historiqueFiltre.length > 1 ? 's' : ''}</span>
+              {showHistorique ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
+            </div>
+          </button>
+          {showHistorique && (
+            <div>{historiqueFiltre.map(r => <HistoriqueRow key={r.id} releve={r} />)}</div>
+          )}
+        </div>
       )}
     </div>
   )
@@ -225,6 +350,8 @@ export default function MesReleves() {
   const [historique, setHistorique] = useState([])
   const [loading, setLoading] = useState(true)
   const [showHistorique, setShowHistorique] = useState(false)
+
+  const isAdmin = ['admin', 'gestionnaire'].includes(user?.role)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -259,60 +386,78 @@ export default function MesReleves() {
   const historiqueFiltre = historique.filter(r => r.date !== today)
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="max-w-3xl space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-gray-800">Mes relevés</h1>
         <p className="text-gray-500 text-sm capitalize mt-0.5">{todayFr}</p>
       </div>
 
-      {!user?.conducteur_id && (
+      {/* Section admin */}
+      {isAdmin && (
+        <section className="space-y-2">
+          <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">Saisie pour un conducteur</h2>
+          <AdminReleves />
+        </section>
+      )}
+
+      {/* Section conducteur personnel */}
+      {user?.conducteur_id && (
+        <section className="space-y-4">
+          {isAdmin && <h2 className="text-lg font-semibold text-gray-700 border-b pb-2">Mes propres relevés</h2>}
+
+          {loading && <p className="text-gray-500 text-sm">Chargement...</p>}
+
+          {!loading && vehicules.length === 0 && (
+            <div className="card p-6 text-center text-gray-500 text-sm">
+              Aucun véhicule ne vous est affecté pour aujourd'hui.
+            </div>
+          )}
+
+          {!loading && vehicules.map(v => (
+            <VehiculeCard
+              key={v.id}
+              vehicule={v}
+              releve={getReleveForVehicule(v.id)}
+              historique={historique}
+              conducteurId={null}
+              onRefresh={fetchData}
+            />
+          ))}
+
+          <div className="card p-0 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setShowHistorique(p => !p)}
+              className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
+            >
+              <h2 className="font-bold text-gray-800">Historique des relevés</h2>
+              <div className="flex items-center gap-2">
+                {historiqueFiltre.length > 0 && (
+                  <span className="text-xs text-gray-400">{historiqueFiltre.length} relevé{historiqueFiltre.length > 1 ? 's' : ''}</span>
+                )}
+                {showHistorique ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
+              </div>
+            </button>
+            {showHistorique && (
+              historiqueFiltre.length === 0
+                ? <p className="px-5 pb-4 text-sm text-gray-400">Aucun relevé antérieur.</p>
+                : <div>{historiqueFiltre.map(r => <HistoriqueRow key={r.id} releve={r} />)}</div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {!user?.conducteur_id && !isAdmin && (
         <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-4 text-sm text-blue-800">
           <Info size={18} className="flex-shrink-0 mt-0.5" />
           <p>Votre compte n'est pas encore lié à un profil conducteur. Contactez l'administrateur.</p>
         </div>
       )}
 
-      {user?.conducteur_id && loading && (
-        <p className="text-gray-500 text-sm">Chargement...</p>
-      )}
-
-      {user?.conducteur_id && !loading && vehicules.length === 0 && (
-        <div className="card p-6 text-center text-gray-500 text-sm">
-          Aucun véhicule ne vous est affecté pour aujourd'hui.
-        </div>
-      )}
-
-      {user?.conducteur_id && !loading && vehicules.map(v => (
-        <VehiculeCard
-          key={v.id}
-          vehicule={v}
-          releve={getReleveForVehicule(v.id)}
-          historique={historique}
-          onRefresh={fetchData}
-        />
-      ))}
-
-      {/* Historique */}
-      {user?.conducteur_id && (
-        <div className="card p-0 overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setShowHistorique(p => !p)}
-            className="w-full flex items-center justify-between px-5 py-4 hover:bg-gray-50 transition-colors"
-          >
-            <h2 className="font-bold text-gray-800">Historique des relevés</h2>
-            <div className="flex items-center gap-2">
-              {historiqueFiltre.length > 0 && (
-                <span className="text-xs text-gray-400">{historiqueFiltre.length} relevé{historiqueFiltre.length > 1 ? 's' : ''}</span>
-              )}
-              {showHistorique ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
-            </div>
-          </button>
-          {showHistorique && (
-            historiqueFiltre.length === 0
-              ? <p className="px-5 pb-4 text-sm text-gray-400">Aucun relevé antérieur.</p>
-              : <div>{historiqueFiltre.map(r => <HistoriqueRow key={r.id} releve={r} />)}</div>
-          )}
+      {!user?.conducteur_id && isAdmin && (
+        <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-4 text-sm text-blue-800">
+          <Info size={18} className="flex-shrink-0 mt-0.5" />
+          <p>Votre compte administrateur n'est pas lié à un profil conducteur. Utilisez la section ci-dessus pour saisir les relevés des conducteurs.</p>
         </div>
       )}
     </div>

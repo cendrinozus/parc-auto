@@ -15,17 +15,66 @@ def get_current_user():
     return Utilisateur.query.get(int(get_jwt_identity()))
 
 
+def _conducteur_actuel_vehicule(vehicule_id):
+    """Retourne le conducteur_id de l'affectation active pour un véhicule, ou None."""
+    from sqlalchemy import text
+    row = db.session.execute(
+        text("""
+            SELECT conducteur_id FROM affectations
+            WHERE vehicule_id = :vid AND date_fin IS NULL
+            ORDER BY date_debut DESC LIMIT 1
+        """),
+        {'vid': vehicule_id}
+    ).fetchone()
+    if not row:
+        row = db.session.execute(
+            text("""
+                SELECT conducteur_id FROM affectations
+                WHERE vehicule_id = :vid AND date_fin >= CURDATE()
+                ORDER BY date_fin DESC LIMIT 1
+            """),
+            {'vid': vehicule_id}
+        ).fetchone()
+    return row[0] if row else None
+
+
 @releves_bp.route('/aujourd-hui', methods=['GET'])
 @jwt_required()
 def get_aujourd_hui():
     user = get_current_user()
-    if not user or not user.conducteur_id:
-        return jsonify({'vehicules': [], 'releves': []}), 200
+    role = get_jwt().get('role')
 
     today = date.today()
 
+    # Admin/gestionnaire : sélection par véhicule
+    vehicule_id_param = request.args.get('vehicule_id', type=int)
+    if vehicule_id_param and role in ('admin', 'gestionnaire'):
+        conducteur_id = _conducteur_actuel_vehicule(vehicule_id_param)
+        vehicule = Vehicule.query.get(vehicule_id_param)
+        if not vehicule:
+            return jsonify({'vehicules': [], 'releves': [], 'conducteur_id': None}), 200
+        releve = ReleveJournalier.query.filter_by(
+            vehicule_id=vehicule_id_param, date=today
+        ).first()
+        conducteur = Conducteur.query.get(conducteur_id) if conducteur_id else None
+        return jsonify({
+            'vehicules': [vehicule.to_dict()],
+            'releves': [releve.to_dict()] if releve else [],
+            'conducteur_id': conducteur_id,
+            'conducteur_nom': f"{conducteur.prenom} {conducteur.nom}" if conducteur else None
+        }), 200
+
+    # Admin/gestionnaire : sélection par conducteur (rétrocompat)
+    conducteur_id_param = request.args.get('conducteur_id', type=int)
+    if conducteur_id_param and role in ('admin', 'gestionnaire'):
+        conducteur_id = conducteur_id_param
+    else:
+        if not user or not user.conducteur_id:
+            return jsonify({'vehicules': [], 'releves': []}), 200
+        conducteur_id = user.conducteur_id
+
     affectations = Affectation.query.filter(
-        Affectation.conducteur_id == user.conducteur_id,
+        Affectation.conducteur_id == conducteur_id,
         db.or_(
             Affectation.date_fin == None,
             Affectation.date_fin >= today
@@ -36,7 +85,7 @@ def get_aujourd_hui():
     vehicules = Vehicule.query.filter(Vehicule.id.in_(vehicule_ids)).all() if vehicule_ids else []
 
     releves = ReleveJournalier.query.filter(
-        ReleveJournalier.conducteur_id == user.conducteur_id,
+        ReleveJournalier.conducteur_id == conducteur_id,
         ReleveJournalier.date == today
     ).all()
 
@@ -50,17 +99,35 @@ def get_aujourd_hui():
 @jwt_required()
 def create_releve():
     user = get_current_user()
-    if not user or not user.conducteur_id:
-        return jsonify({'message': 'Aucun profil conducteur lié à ce compte'}), 400
-
+    role = get_jwt().get('role')
     data = request.get_json()
+
+    conducteur_id_body = data.get('conducteur_id')
+    vehicule_id_body = data.get('vehicule_id')
+    if role in ('admin', 'gestionnaire'):
+        if conducteur_id_body:
+            conducteur_id = conducteur_id_body
+        elif vehicule_id_body:
+            # Auto-détection depuis l'affectation active
+            conducteur_id = _conducteur_actuel_vehicule(vehicule_id_body)
+            if not conducteur_id:
+                return jsonify({'message': 'Aucun conducteur affecté à ce véhicule'}), 400
+        else:
+            if not user or not user.conducteur_id:
+                return jsonify({'message': 'Aucun profil conducteur lié à ce compte'}), 400
+            conducteur_id = user.conducteur_id
+    else:
+        if not user or not user.conducteur_id:
+            return jsonify({'message': 'Aucun profil conducteur lié à ce compte'}), 400
+        conducteur_id = user.conducteur_id
+
     vehicule_id = data.get('vehicule_id')
     if not vehicule_id:
         return jsonify({'message': 'vehicule_id requis'}), 400
 
     today = date.today()
     existing = ReleveJournalier.query.filter_by(
-        conducteur_id=user.conducteur_id,
+        conducteur_id=conducteur_id,
         vehicule_id=vehicule_id,
         date=today
     ).first()
@@ -68,7 +135,7 @@ def create_releve():
         return jsonify({'message': 'Un relevé existe déjà pour ce véhicule aujourd\'hui'}), 409
 
     releve = ReleveJournalier(
-        conducteur_id=user.conducteur_id,
+        conducteur_id=conducteur_id,
         vehicule_id=vehicule_id,
         date=today,
         km_debut=data.get('km_debut'),
@@ -169,11 +236,36 @@ def delete_trajet(id, tid):
 @jwt_required()
 def get_historique():
     user = get_current_user()
-    if not user or not user.conducteur_id:
-        return jsonify([]), 200
+    role = get_jwt().get('role')
+
+    # Admin/gestionnaire : historique par véhicule
+    vehicule_id_param = request.args.get('vehicule_id', type=int)
+    if vehicule_id_param and role in ('admin', 'gestionnaire'):
+        releves = ReleveJournalier.query.filter(
+            ReleveJournalier.vehicule_id == vehicule_id_param
+        ).order_by(ReleveJournalier.date.desc()).limit(90).all()
+        result = []
+        for r in releves:
+            d = r.to_dict()
+            vehicule = Vehicule.query.get(r.vehicule_id)
+            if vehicule:
+                d['vehicule_info'] = f"{vehicule.immatriculation} — {vehicule.marque} {vehicule.modele}"
+            conducteur = Conducteur.query.get(r.conducteur_id)
+            if conducteur:
+                d['conducteur_nom'] = f"{conducteur.prenom} {conducteur.nom}"
+            result.append(d)
+        return jsonify(result), 200
+
+    conducteur_id_param = request.args.get('conducteur_id', type=int)
+    if conducteur_id_param and role in ('admin', 'gestionnaire'):
+        conducteur_id = conducteur_id_param
+    else:
+        if not user or not user.conducteur_id:
+            return jsonify([]), 200
+        conducteur_id = user.conducteur_id
 
     releves = ReleveJournalier.query.filter(
-        ReleveJournalier.conducteur_id == user.conducteur_id
+        ReleveJournalier.conducteur_id == conducteur_id
     ).order_by(ReleveJournalier.date.desc()).limit(90).all()
 
     result = []
