@@ -74,7 +74,8 @@ export const echeancesService = {
 }
 
 export const relevesService = {
-  getAujourdhui: (params) => api.get('/releves/aujourd-hui', { params }),
+  pourVehicule: (params) => api.get('/releves/pour-vehicule', { params }),
+  pourDate: (params) => api.get('/releves/pour-date', { params }),
   getHistorique: (params) => api.get('/releves/historique', { params }),
   getAll: (params) => api.get('/releves/', { params }),
   create: (data) => api.post('/releves/', data),

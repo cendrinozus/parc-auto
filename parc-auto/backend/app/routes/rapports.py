@@ -40,6 +40,7 @@ def rapport_global():
 @jwt_required()
 def rapport_par_vehicule():
     annee = request.args.get('annee', type=int)
+    vehicule_id = request.args.get('vehicule_id', type=int)
     query = db.session.query(
         Vehicule.id,
         Vehicule.immatriculation,
@@ -53,6 +54,8 @@ def rapport_par_vehicule():
 
     if annee:
         query = query.filter(extract('year', Plein.date_plein) == annee)
+    if vehicule_id:
+        query = query.filter(Plein.vehicule_id == vehicule_id)
 
     rows = query.group_by(Vehicule.id).order_by(func.sum(Plein.cout_total).desc()).all()
 

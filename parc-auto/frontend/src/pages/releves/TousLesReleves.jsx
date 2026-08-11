@@ -7,19 +7,8 @@ import { Search, ChevronDown, ChevronUp, FileDown } from 'lucide-react'
 const today = new Date().toISOString().slice(0, 10)
 const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
-function StatutBadge({ statut }) {
-  if (statut === 'clos') {
-    return <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-100 text-green-700">Clôturé</span>
-  }
-  return <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">En cours</span>
-}
-
 function ReleveRow({ releve }) {
   const [open, setOpen] = useState(false)
-  const kmParcourus = releve.km_fin != null && releve.km_debut != null
-    ? (releve.km_fin - releve.km_debut).toFixed(1)
-    : null
-
   return (
     <div className="border-b border-gray-100 last:border-0">
       <button
@@ -29,22 +18,25 @@ function ReleveRow({ releve }) {
       >
         <div className="flex-1 grid grid-cols-4 gap-2 items-center text-sm">
           <span className="font-medium text-gray-800">
-            {new Date(releve.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+            {new Date(releve.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
           </span>
-          <span className="text-gray-600 font-semibold">{releve.conducteur_nom}</span>
-          <span className="text-gray-500 truncate">{releve.vehicule_info}</span>
+          <span className="text-gray-600 font-semibold">{releve.conducteur_nom ?? '—'}</span>
+          <span className="text-gray-500 truncate">{releve.vehicule_info ?? '—'}</span>
           <span className="text-gray-600">
-            {releve.km_debut != null ? `${releve.km_debut} → ${releve.km_fin ?? '?'} km` : '—'}
-            {kmParcourus != null && <span className="text-cipres-700 font-medium ml-1">({kmParcourus} km)</span>}
+            {releve.km_debut != null
+              ? <>{releve.km_debut?.toLocaleString('fr-FR')} km{releve.km_parcourus != null && <span className="text-cipres-700 font-semibold ml-2">+{releve.km_parcourus?.toLocaleString('fr-FR')} km</span>}</>
+              : '—'}
           </span>
         </div>
-        <StatutBadge statut={releve.statut} />
         {open ? <ChevronUp size={15} className="text-gray-400 flex-shrink-0" /> : <ChevronDown size={15} className="text-gray-400 flex-shrink-0" />}
       </button>
       {open && (
-        <div className="px-5 pb-3 text-sm text-gray-600">
+        <div className="px-5 pb-3 text-sm text-gray-600 space-y-1">
+          {releve.km_parcourus != null && (
+            <p><span className="font-medium">Km parcourus depuis le relevé précédent :</span> {releve.km_parcourus?.toLocaleString('fr-FR')} km</p>
+          )}
           {releve.observations
-            ? <><span className="font-medium">Observations :</span> {releve.observations}</>
+            ? <p><span className="font-medium">Observations :</span> {releve.observations}</p>
             : <span className="text-gray-400 italic">Aucune observation.</span>
           }
         </div>
@@ -108,14 +100,12 @@ export default function TousLesReleves() {
       subtitle: `${relevesFiltres.length} relevé(s) · Période : ${periode}`,
       filename: `releves_${toutAfficher ? 'complet' : dateDebut + '_' + dateFin}.pdf`,
       columns: [
-        { header: 'Date',          accessor: r => new Date(r.date).toLocaleDateString('fr-FR') },
-        { header: 'Conducteur',    accessor: r => r.conducteur_nom },
-        { header: 'Véhicule',      accessor: r => r.vehicule_info },
-        { header: 'Km début',      accessor: r => r.km_debut != null ? String(r.km_debut) : null },
-        { header: 'Km fin',        accessor: r => r.km_fin != null ? String(r.km_fin) : null },
-        { header: 'Km parcourus',  accessor: r => r.km_fin != null && r.km_debut != null ? String((r.km_fin - r.km_debut).toFixed(1)) : null },
-        { header: 'Statut',        accessor: r => r.statut === 'clos' ? 'Clôturé' : 'En cours' },
-        { header: 'Observations',  accessor: r => r.observations },
+        { header: 'Date',             accessor: r => new Date(r.date + 'T00:00:00').toLocaleDateString('fr-FR') },
+        { header: 'Conducteur',       accessor: r => r.conducteur_nom },
+        { header: 'Véhicule',         accessor: r => r.vehicule_info },
+        { header: 'Km compteur',      accessor: r => r.km_debut != null ? r.km_debut.toLocaleString('fr-FR') : '—' },
+        { header: 'Km parcourus',     accessor: r => r.km_parcourus != null ? `+${r.km_parcourus.toLocaleString('fr-FR')}` : '—' },
+        { header: 'Observations',     accessor: r => r.observations },
       ],
       rows: relevesFiltres,
     })
@@ -196,7 +186,7 @@ export default function TousLesReleves() {
             <span>Date</span>
             <span>Conducteur</span>
             <span>Véhicule</span>
-            <span>Kilométrage</span>
+            <span>Km compteur · parcourus</span>
           </div>
         )}
 
