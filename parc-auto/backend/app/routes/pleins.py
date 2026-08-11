@@ -18,9 +18,11 @@ def calculer_consommation(vehicule_id, km_actuel, litres, exclude_id=None):
     if exclude_id:
         query = query.filter(Plein.id != exclude_id)
     dernier = query.order_by(Plein.km_compteur.desc()).first()
-    if dernier and km_actuel > dernier.km_compteur:
-        distance = km_actuel - dernier.km_compteur
-        return round((litres / distance) * 100, 2)
+    if dernier:
+        km_dernier = float(dernier.km_compteur)
+        if km_actuel > km_dernier:
+            distance = km_actuel - km_dernier
+            return round((float(litres) / distance) * 100, 2)
     return None
 
 @pleins_bp.route('/', methods=['GET'])
@@ -70,8 +72,8 @@ def create_plein():
     km = float(data['km_compteur'])
     plein_complet = data.get('plein_complet', True)
 
-    if vehicule.km_actuel and km < vehicule.km_actuel:
-        return jsonify({'message': f'Le km compteur ({km:,.0f}) est inférieur au dernier relevé ({vehicule.km_actuel:,.0f} km)'}), 400
+    if vehicule.km_actuel and km < float(vehicule.km_actuel):
+        return jsonify({'message': f'Le km compteur ({km:,.0f}) est inférieur au dernier relevé ({float(vehicule.km_actuel):,.0f} km)'}), 400
 
     conso = calculer_consommation(vehicule.id, km, litres) if plein_complet else None
 
@@ -129,8 +131,8 @@ def update_plein(id):
             Plein.id != p.id,
             Plein.km_compteur < p.km_compteur
         ).order_by(Plein.km_compteur.desc()).first()
-        if precedent and new_km < precedent.km_compteur:
-            return jsonify({'message': f'Le km compteur ({new_km:,.0f}) est inférieur au relevé précédent ({precedent.km_compteur:,.0f} km)'}), 400
+        if precedent and new_km < float(precedent.km_compteur):
+            return jsonify({'message': f'Le km compteur ({new_km:,.0f}) est inférieur au relevé précédent ({float(precedent.km_compteur):,.0f} km)'}), 400
         p.km_compteur = new_km
 
     # Champs simples
