@@ -203,6 +203,20 @@ def update_releve(id):
     return jsonify(releve.to_dict()), 200
 
 
+# ─── DELETE : supprimer un relevé (admin/gestionnaire) ───
+
+@releves_bp.route('/<int:id>', methods=['DELETE'])
+@jwt_required()
+def delete_releve(id):
+    role = get_jwt().get('role')
+    if role not in ('admin', 'gestionnaire'):
+        return jsonify({'message': 'Accès réservé aux administrateurs et gestionnaires'}), 403
+    releve = ReleveJournalier.query.get_or_404(id)
+    db.session.delete(releve)
+    db.session.commit()
+    return jsonify({'message': 'Relevé supprimé'}), 200
+
+
 # ─── GET : historique par conducteur ou véhicule ───
 
 @releves_bp.route('/historique', methods=['GET'])

@@ -1,35 +1,66 @@
 import { useState, useEffect, useCallback } from 'react'
+import { useAuth } from '../../context/AuthContext'
 import { relevesService } from '../../services'
 import { exportToPdf } from '../../utils/exportPdf'
 import toast from 'react-hot-toast'
-import { Search, ChevronDown, ChevronUp, FileDown } from 'lucide-react'
+import { Search, ChevronDown, ChevronUp, FileDown, Trash2 } from 'lucide-react'
 
 const today = new Date().toISOString().slice(0, 10)
 const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
 
-function ReleveRow({ releve }) {
+function ReleveRow({ releve, canDelete, onDeleted }) {
   const [open, setOpen] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+
+  const handleDelete = async (e) => {
+    e.stopPropagation()
+    if (!window.confirm(`Supprimer le relevé du ${new Date(releve.date + 'T00:00:00').toLocaleDateString('fr-FR')} pour ${releve.conducteur_nom ?? releve.vehicule_info} ?`)) return
+    setDeleting(true)
+    try {
+      await relevesService.delete(releve.id)
+      toast.success('Relevé supprimé')
+      onDeleted(releve.id)
+    } catch {
+      toast.error('Erreur lors de la suppression')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div className="border-b border-gray-100 last:border-0">
-      <button
-        type="button"
-        onClick={() => setOpen(p => !p)}
-        className="w-full flex items-center gap-3 px-5 py-3 hover:bg-gray-50 text-left transition-colors"
-      >
-        <div className="flex-1 grid grid-cols-4 gap-2 items-center text-sm">
-          <span className="font-medium text-gray-800">
-            {new Date(releve.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
-          </span>
-          <span className="text-gray-600 font-semibold">{releve.conducteur_nom ?? '—'}</span>
-          <span className="text-gray-500 truncate">{releve.vehicule_info ?? '—'}</span>
-          <span className="text-gray-600">
-            {releve.km_debut != null
-              ? <>{releve.km_debut?.toLocaleString('fr-FR')} km{releve.km_parcourus != null && <span className="text-cipres-700 font-semibold ml-2">+{releve.km_parcourus?.toLocaleString('fr-FR')} km</span>}</>
-              : '—'}
-          </span>
-        </div>
-        {open ? <ChevronUp size={15} className="text-gray-400 flex-shrink-0" /> : <ChevronDown size={15} className="text-gray-400 flex-shrink-0" />}
-      </button>
+      <div className="flex items-center gap-2 pr-3">
+        <button
+          type="button"
+          onClick={() => setOpen(p => !p)}
+          className="flex-1 flex items-center gap-3 px-5 py-3 hover:bg-gray-50 text-left transition-colors"
+        >
+          <div className="flex-1 grid grid-cols-4 gap-2 items-center text-sm">
+            <span className="font-medium text-gray-800">
+              {new Date(releve.date + 'T00:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}
+            </span>
+            <span className="text-gray-600 font-semibold">{releve.conducteur_nom ?? '—'}</span>
+            <span className="text-gray-500 truncate">{releve.vehicule_info ?? '—'}</span>
+            <span className="text-gray-600">
+              {releve.km_debut != null
+                ? <>{releve.km_debut?.toLocaleString('fr-FR')} km{releve.km_parcourus != null && <span className="text-cipres-700 font-semibold ml-2">+{releve.km_parcourus?.toLocaleString('fr-FR')} km</span>}</>
+                : '—'}
+            </span>
+          </div>
+          {open ? <ChevronUp size={15} className="text-gray-400 flex-shrink-0" /> : <ChevronDown size={15} className="text-gray-400 flex-shrink-0" />}
+        </button>
+        {canDelete && (
+          <button
+            type="button"
+            onClick={handleDelete}
+            disabled={deleting}
+            title="Supprimer ce relevé"
+            className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors flex-shrink-0"
+          >
+            <Trash2 size={15} />
+          </button>
+        )}
+      </div>
       {open && (
         <div className="px-5 pb-3 text-sm text-gray-600 space-y-1">
           {releve.km_parcourus != null && (
@@ -46,6 +77,9 @@ function ReleveRow({ releve }) {
 }
 
 export default function TousLesReleves() {
+  const { user } = useAuth()
+  const canDelete = ['admin', 'gestionnaire'].includes(user?.role)
+
   const [releves, setReleves] = useState([])
   const [loading, setLoading] = useState(false)
   const [dateDebut, setDateDebut] = useState(ninetyDaysAgo)
@@ -84,6 +118,8 @@ export default function TousLesReleves() {
     else fetchReleves(dateDebut, dateFin)
   }
 
+  const handleDeleted = (id) => setReleves(prev => prev.filter(r => r.id !== id))
+
   const relevesFiltres = releves.filter(r => {
     if (!recherche) return true
     const q = recherche.toLowerCase()
@@ -100,12 +136,12 @@ export default function TousLesReleves() {
       subtitle: `${relevesFiltres.length} relevé(s) · Période : ${periode}`,
       filename: `releves_${toutAfficher ? 'complet' : dateDebut + '_' + dateFin}.pdf`,
       columns: [
-        { header: 'Date',             accessor: r => new Date(r.date + 'T00:00:00').toLocaleDateString('fr-FR') },
-        { header: 'Conducteur',       accessor: r => r.conducteur_nom },
-        { header: 'Véhicule',         accessor: r => r.vehicule_info },
-        { header: 'Km compteur',      accessor: r => r.km_debut != null ? r.km_debut.toLocaleString('fr-FR') : '—' },
-        { header: 'Km parcourus',     accessor: r => r.km_parcourus != null ? `+${r.km_parcourus.toLocaleString('fr-FR')}` : '—' },
-        { header: 'Observations',     accessor: r => r.observations },
+        { header: 'Date',         accessor: r => new Date(r.date + 'T00:00:00').toLocaleDateString('fr-FR') },
+        { header: 'Conducteur',   accessor: r => r.conducteur_nom },
+        { header: 'Véhicule',     accessor: r => r.vehicule_info },
+        { header: 'Km compteur',  accessor: r => r.km_debut != null ? r.km_debut.toLocaleString('fr-FR') : '—' },
+        { header: 'Km parcourus', accessor: r => r.km_parcourus != null ? `+${r.km_parcourus.toLocaleString('fr-FR')}` : '—' },
+        { header: 'Observations', accessor: r => r.observations },
       ],
       rows: relevesFiltres,
     })
@@ -128,34 +164,17 @@ export default function TousLesReleves() {
         <form onSubmit={handleFilter} className="flex flex-wrap gap-3 items-end">
           <div>
             <label className="label">Date début</label>
-            <input
-              type="date"
-              className="input"
-              value={dateDebut}
-              onChange={e => setDateDebut(e.target.value)}
-              disabled={toutAfficher}
-            />
+            <input type="date" className="input" value={dateDebut} onChange={e => setDateDebut(e.target.value)} disabled={toutAfficher} />
           </div>
           <div>
             <label className="label">Date fin</label>
-            <input
-              type="date"
-              className="input"
-              value={dateFin}
-              onChange={e => setDateFin(e.target.value)}
-              disabled={toutAfficher}
-            />
+            <input type="date" className="input" value={dateFin} onChange={e => setDateFin(e.target.value)} disabled={toutAfficher} />
           </div>
           <button type="submit" disabled={loading || toutAfficher} className="btn-primary flex items-center gap-1.5">
             <Search size={15} /> Filtrer
           </button>
           <label className="flex items-center gap-2 cursor-pointer text-sm text-gray-600 ml-2">
-            <input
-              type="checkbox"
-              className="rounded"
-              checked={toutAfficher}
-              onChange={handleToutAfficher}
-            />
+            <input type="checkbox" className="rounded" checked={toutAfficher} onChange={handleToutAfficher} />
             Tout afficher (sans limite de date)
           </label>
         </form>
@@ -180,7 +199,6 @@ export default function TousLesReleves() {
           </h2>
         </div>
 
-        {/* En-tête colonnes */}
         {relevesFiltres.length > 0 && (
           <div className="grid grid-cols-4 gap-2 px-5 py-2 bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wide border-b border-gray-100">
             <span>Date</span>
@@ -194,7 +212,14 @@ export default function TousLesReleves() {
           <p className="px-5 py-6 text-sm text-gray-400 text-center">Aucun relevé trouvé.</p>
         )}
 
-        {!loading && relevesFiltres.map(r => <ReleveRow key={r.id} releve={r} />)}
+        {!loading && relevesFiltres.map(r => (
+          <ReleveRow
+            key={r.id}
+            releve={r}
+            canDelete={canDelete}
+            onDeleted={handleDeleted}
+          />
+        ))}
       </div>
     </div>
   )

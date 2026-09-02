@@ -81,6 +81,40 @@ cd parc-auto
 sudo docker compose up --build
 L'application sera ensuite accessible en https://IP_SERVEUR, avec redirection automatique depuis http://.
 
+## Accès à phpMyAdmin
+
+phpMyAdmin est inclus dans le Docker Compose et écoute sur le port **8181** du serveur.
+
+### Depuis le réseau local (même sous-réseau)
+
+Ouvrez directement dans le navigateur :
+```
+http://192.168.1.45:8181
+```
+
+### Depuis un réseau différent (tunnel SSH)
+
+Si votre PC n'est pas sur le même sous-réseau que le serveur, utilisez un tunnel SSH :
+
+```bash
+# Windows (PowerShell / cmd) ou Linux/Mac
+ssh -L 8181:localhost:8181 cipres@192.168.1.45
+```
+
+Laissez ce terminal ouvert, puis accédez à :
+```
+http://localhost:8181
+```
+
+### Identifiants
+
+| Utilisateur | Mot de passe |
+|-------------|-------------|
+| `root` | `rootpassword` |
+| `parc_user` | `parc_pass` |
+
+---
+
 ## Structure du projet
 
 ```

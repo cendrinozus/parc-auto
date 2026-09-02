@@ -80,6 +80,7 @@ export const relevesService = {
   getAll: (params) => api.get('/releves/', { params }),
   create: (data) => api.post('/releves/', data),
   update: (id, data) => api.put(`/releves/${id}`, data),
+  delete: (id) => api.delete(`/releves/${id}`),
   addTrajet: (id, data) => api.post(`/releves/${id}/trajets`, data),
   updateTrajet: (id, tid, data) => api.put(`/releves/${id}/trajets/${tid}`, data),
   deleteTrajet: (id, tid) => api.delete(`/releves/${id}/trajets/${tid}`)
